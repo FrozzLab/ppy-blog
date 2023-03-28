@@ -1,9 +1,19 @@
-# PPY Project - Blog
+# Blog Web App
 
-The project consists of a web application that allows the user manage their own blog.
-The user can create an account, which allows them to create their own blog and comment on other people's posts.
-If the user doesn't have an account, they can still view existing blogs, but not interact with them.
+The project consists of a web application for user interaction through blogs.  
+  
+A blog is a visual collection of posts attributed to a user. A blog contains a short description of the topic of said blog, its rating and posts. The posts support both text and image/video integration, as well as comments from other users which also support the same formats.
+
+The application supports:
+* Without an account:
+    * View public blogs;
+    * Create an account;
+* With an account: 
+    * Create and delete a blog;
+    * Create, modify and delete posts in their blog;
+    * Rate other users' blogs;
+    * Comment under posts.
 
 Project by:
-s24820 (JakubPiwowarczyk)
-s24109 (FrozzLab)
+* s24820 (JakubPiwowarczyk)
+* s24109 (FrozzLab)
