@@ -17,3 +17,5 @@ The application supports:
 Project by:
 * s24820 (JakubPiwowarczyk)
 * s24109 (FrozzLab)
+
+link for test.pypi: https://test.pypi.org/project/PPY-BLOG/0.0.1/
