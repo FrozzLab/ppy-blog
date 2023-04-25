@@ -127,3 +127,13 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# JetBrains IDE folder
+.idea/
+
+# VSCode IDE folder
+.vscode/
