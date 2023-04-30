@@ -1,10 +1,16 @@
 from datetime import datetime
 
 from pydantic import BaseModel
+from pydantic.schema import Optional
 
 
-class UserIdSchema(BaseModel):
-    user_id: int
+class OrmBaseModel(BaseModel):
+    class Config:
+        orm_mode = True
+
+
+class UserIdSchema(OrmBaseModel):
+    user_id: Optional[int]
 
 
 class InteractionSchema(UserIdSchema):
@@ -12,11 +18,11 @@ class InteractionSchema(UserIdSchema):
     interacted_with_at: datetime
 
 
-class UserSchema(UserIdSchema):
+class UserSchema(OrmBaseModel):
+    id: int
     first_name: str
     last_name: str
     email: str
-    password: str
     country: str
     signup_date: datetime
 
@@ -30,7 +36,7 @@ class UserBlogSchema(UserIdSchema):
     blog_id: int
 
 
-class BlogSchema:
+class BlogSchema(OrmBaseModel):
     title: str
     description: str
     created_at: datetime

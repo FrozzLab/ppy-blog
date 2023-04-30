@@ -161,3 +161,7 @@ class CommentSave:
 
 def get_metadata():
     return metadata
+
+
+def get_mapper_registry():
+    return mapper_registry
