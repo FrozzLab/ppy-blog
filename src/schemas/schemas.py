@@ -43,7 +43,7 @@ class BlogSchema(OrmBaseModel):
     id: str
 
 
-class PostSchema:
+class PostSchema(OrmBaseModel):
     blog_id: int
     title: str
     body: str
@@ -51,7 +51,7 @@ class PostSchema:
     id: int
 
 
-class CommentSchema:
+class CommentSchema(OrmBaseModel):
     post_id: int
     body: str
     created_at: datetime
