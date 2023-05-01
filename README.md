@@ -18,4 +18,6 @@ Project by:
 * s24820 (JakubPiwowarczyk)
 * s24109 (FrozzLab)
 
+### Note: At the moment, security is not a top concern for the project, hence the plaintext storing of user data. Subject to change.
+
 link for test.pypi: https://test.pypi.org/project/PPY-BLOG/0.0.1/
