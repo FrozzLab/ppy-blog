@@ -51,7 +51,7 @@ class PostSchema(OrmBaseModel):
     id: int
 
 
-class CommentSchema(OrmBaseModel):
+class CommentSchema(UserIdSchema):
     post_id: int
     body: str
     created_at: datetime

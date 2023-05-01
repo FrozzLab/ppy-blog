@@ -18,7 +18,7 @@ class User:
     password: Mapped[str] = mapped_column("password")
     country: Mapped[str] = mapped_column("country")
     signup_date: Mapped[datetime] = mapped_column("signup_date")
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column("id", primary_key=True, autoincrement=True)
 
     def __repr__(self):
         return f"User: {self.id} {self.first_name} {self.last_name}"
@@ -28,8 +28,8 @@ class User:
 class UserFollowing:
     __tablename__ = "following"
 
-    user_id: Mapped[int] = mapped_column(ForeignKey("app_user_id"), primary_key=True)
-    follower_id: Mapped[int] = mapped_column(ForeignKey("follower_id"), primary_key=True)
+    user_id: Mapped[int] = mapped_column("app_user_id", ForeignKey("following_app_user"), primary_key=True)
+    follower_id: Mapped[int] = mapped_column("follower_id", ForeignKey("following_follower"), primary_key=True)
     followed_at: Mapped[datetime] = mapped_column("followed_at")
 
     def __repr__(self):
@@ -40,8 +40,8 @@ class UserFollowing:
 class UserBlog:
     __tablename__ = "user_blog"
 
-    user_id: Mapped[int] = mapped_column(ForeignKey("app_user_id"), primary_key=True)
-    blog_id: Mapped[int] = mapped_column(ForeignKey("blog_id"), primary_key=True)
+    user_id: Mapped[int] = mapped_column("app_user_id", ForeignKey("user_blog_user"), primary_key=True)
+    blog_id: Mapped[int] = mapped_column("blog_id", ForeignKey("user_blog_blog"), primary_key=True)
 
     def __repr__(self):
         return f"UserFollowing: {self.user_id} {self.blog_id}"
@@ -54,7 +54,7 @@ class Blog:
     title: Mapped[str] = mapped_column("title")
     description: Mapped[str] = mapped_column("description")
     created_at: Mapped[datetime] = mapped_column("created_at")
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column("id", primary_key=True, autoincrement=True)
 
     def __repr__(self):
         return f"Blog: {self.id} {self.title}"
@@ -64,8 +64,8 @@ class Blog:
 class BlogLike:
     __tablename__ = "blog_like"
 
-    user_id: Mapped[int] = mapped_column(ForeignKey("app_user_id"), primary_key=True)
-    blog_id: Mapped[int] = mapped_column(ForeignKey("blog_id"), primary_key=True)
+    user_id: Mapped[int] = mapped_column("app_user_id", ForeignKey("blog_like_app_user"), primary_key=True)
+    blog_id: Mapped[int] = mapped_column("blog_id", ForeignKey("blog_like_blog"), primary_key=True)
     liked_at: Mapped[datetime] = mapped_column("liked_at")
 
     def __repr__(self):
@@ -76,8 +76,8 @@ class BlogLike:
 class BlogSave:
     __tablename__ = "blog_save"
 
-    user_id: Mapped[int] = mapped_column(ForeignKey("app_user_id"), primary_key=True)
-    blog_id: Mapped[int] = mapped_column(ForeignKey("blog_id"), primary_key=True)
+    user_id: Mapped[int] = mapped_column("app_user_id", ForeignKey("blog_save_app_user"), primary_key=True)
+    blog_id: Mapped[int] = mapped_column("blog_id", ForeignKey("blog_save_blog"), primary_key=True)
     saved_at: Mapped[datetime] = mapped_column("saved_at")
 
     def __repr__(self):
@@ -88,11 +88,11 @@ class BlogSave:
 class Post:
     __tablename__ = "post"
 
-    blog_id: Mapped[int] = mapped_column(ForeignKey("blog_id"))
+    blog_id: Mapped[int] = mapped_column("blog_id", ForeignKey("post_blog"))
     title: Mapped[str] = mapped_column("title")
     body: Mapped[str] = mapped_column("body")
     created_at: Mapped[datetime] = mapped_column("created_at")
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column("id", primary_key=True, autoincrement=True)
 
     def __repr__(self):
         return f"Post: {self.id} {self.title}"
@@ -102,8 +102,8 @@ class Post:
 class PostLike:
     __tablename__ = "post_like"
 
-    user_id: Mapped[int] = mapped_column(ForeignKey("app_user_id"), primary_key=True)
-    post_id: Mapped[int] = mapped_column(ForeignKey("post_id"), primary_key=True)
+    user_id: Mapped[int] = mapped_column("app_user_id", ForeignKey("post_like_app_user"), primary_key=True)
+    post_id: Mapped[int] = mapped_column("post_id", ForeignKey("post_like_post"), primary_key=True)
     liked_at: Mapped[datetime] = mapped_column("liked_at")
 
     def __repr__(self):
@@ -114,8 +114,8 @@ class PostLike:
 class PostSave:
     __tablename__ = "post_save"
 
-    user_id: Mapped[int] = mapped_column(ForeignKey("app_user_id"), primary_key=True)
-    post_id: Mapped[int] = mapped_column(ForeignKey("post_id"), primary_key=True)
+    user_id: Mapped[int] = mapped_column("app_user_id", ForeignKey("post_save_app_user"), primary_key=True)
+    post_id: Mapped[int] = mapped_column("post_id", ForeignKey("post_save_post"), primary_key=True)
     saved_at: Mapped[datetime] = mapped_column("saved_at")
 
     def __repr__(self):
@@ -126,10 +126,11 @@ class PostSave:
 class Comment:
     __tablename__ = "comment"
 
-    post_id: Mapped[int] = mapped_column(ForeignKey("post_id"))
+    user_id: Mapped[int] = mapped_column("user_id", ForeignKey("comment_app_user"))
+    post_id: Mapped[int] = mapped_column("post_id", ForeignKey("comment_post"))
     body: Mapped[str] = mapped_column("body")
     created_at: Mapped[datetime] = mapped_column("created_at")
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column("id", primary_key=True, autoincrement=True)
 
     def __repr__(self):
         return f"Comment: {self.id} {self.body}"
@@ -139,8 +140,8 @@ class Comment:
 class CommentLike:
     __tablename__ = "comment_like"
 
-    user_id: Mapped[int] = mapped_column(ForeignKey("app_user_id"), primary_key=True)
-    comment_id: Mapped[int] = mapped_column(ForeignKey("comment_id"), primary_key=True)
+    user_id: Mapped[int] = mapped_column("app_user_id", ForeignKey("comment_like_app_user"), primary_key=True)
+    comment_id: Mapped[int] = mapped_column("comment_id", ForeignKey("comment_like_comment"), primary_key=True)
     liked_at: Mapped[datetime] = mapped_column("liked_at")
 
     def __repr__(self):
@@ -151,8 +152,8 @@ class CommentLike:
 class CommentSave:
     __tablename__ = "comment_save"
 
-    user_id: Mapped[int] = mapped_column(ForeignKey("app_user_id"), primary_key=True)
-    comment_id: Mapped[int] = mapped_column(ForeignKey("comment_id"), primary_key=True)
+    user_id: Mapped[int] = mapped_column("app_user_id", ForeignKey("comment_save_app_user"), primary_key=True)
+    comment_id: Mapped[int] = mapped_column("comment_id", ForeignKey("comment_save_comment"), primary_key=True)
     saved_at: Mapped[datetime] = mapped_column("saved_at")
 
     def __repr__(self):
