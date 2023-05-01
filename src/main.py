@@ -33,6 +33,14 @@ tags_metadata = [
         "description": "GET operations returning a list of data points.",
     },
     {
+        "name": "all",
+        "description": "GET operations returning a list of all datapoints of the given type.",
+    },
+    {
+        "name": "update",
+        "description": "PUT operations updating a single data point.",
+    },
+    {
         "name": "delete",
         "description": "DELETE operations handling the deletion of a single datapoint."
     }
@@ -64,7 +72,7 @@ def create_comment(new_comment_schema: schemas.CommentCreateSchema):
 
 
 @app.get("/api/get/getUser/{user_id}", response_model=schemas.UserGetSchema, tags=["single"])
-def get_content_by_id(user_id: int):
+def get_user_by_id(user_id: int):
     user = crud.get_user_by_id(session, user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
@@ -141,6 +149,58 @@ def get_user_follows(user_id: int):
     if not user_follows:
         raise HTTPException(status_code=404, detail="The user does not exist or does not follow anyone")
     return user_follows
+
+
+@app.get("/api/get/getAllUsers", response_model=list[schemas.UserGetSchema], tags=["all"])
+def get_all_users():
+    users = crud.get_all_users(session)
+    if users is None:
+        raise HTTPException(status_code=404, detail="No users in database")
+    return users
+
+
+@app.get("/api/get/getAllBlogs", response_model=list[schemas.BlogGetSchema], tags=["all"])
+def get_all_blogs():
+    blogs = crud.get_all_blogs(session)
+    if blogs is None:
+        raise HTTPException(status_code=404, detail="No blogs in database")
+    return blogs
+
+
+@app.get("/api/get/getAllPosts", response_model=list[schemas.PostGetSchema], tags=["all"])
+def get_all_posts():
+    posts = crud.get_all_posts(session)
+    if posts is None:
+        raise HTTPException(status_code=404, detail="No posts in database")
+    return posts
+
+
+@app.get("/api/get/getAllComments", response_model=list[schemas.CommentGetSchema], tags=["all"])
+def get_all_comments():
+    comments = crud.get_all_comments(session)
+    if comments is None:
+        raise HTTPException(status_code=404, detail="No comments in database")
+    return comments
+
+
+@app.put("/api/put/updateUser/{user_id}", response_model=schemas.UserGetSchema, tags=["update"])
+def update_user_by_id(user_update_data: schemas.UserUpdateSchema, user_id: int):
+    return crud.update_user_by_id(session, user_update_data, user_id)
+
+
+@app.put("/api/put/updateBlog/{blog_id}", response_model=schemas.BlogGetSchema, tags=["update"])
+def update_blog_by_id(blog_update_data: schemas.BlogUpdateSchema, blog_id: int):
+    return crud.update_blog_by_id(session, blog_update_data, blog_id)
+
+
+@app.put("/api/put/updatePost/{post_id}", response_model=schemas.PostGetSchema, tags=["update"])
+def update_post_by_id(post_update_data: schemas.PostUpdateSchema, post_id: int):
+    return crud.update_post_by_id(session, post_update_data, post_id)
+
+
+@app.put("/api/put/updateComment/{comment_id}", response_model=schemas.CommentGetSchema, tags=["update"])
+def update_comment_by_id(comment_update_data: schemas.CommentUpdateSchema, comment_id: int):
+    return crud.update_comment_by_id(session, comment_update_data, comment_id)
 
 
 @app.delete("/api/delete/deleteUser/{user_id}", status_code=204, tags=["delete"])

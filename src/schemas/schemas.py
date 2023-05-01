@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from pydantic import BaseModel
+from pydantic.schema import Optional
 
 
 class OrmBaseModel(BaseModel):
@@ -23,6 +24,14 @@ class UserCreateSchema(UserBaseSchema):
 class UserGetSchema(UserBaseSchema):
     id: int
     signup_date: datetime
+
+
+class UserUpdateSchema(OrmBaseModel):
+    first_name: Optional[str]
+    last_name: Optional[str]
+    profile_name: Optional[str]
+    email: Optional[str]
+    country: Optional[str]
 
 
 class UserFollowingSchema(OrmBaseModel):
@@ -56,6 +65,11 @@ class BlogGetSchema(BlogCreateSchema):
     created_at: datetime
 
 
+class BlogUpdateSchema(OrmBaseModel):
+    title: Optional[str]
+    description: Optional[str]
+
+
 class PostBaseSchema(OrmBaseModel):
     blog_id: int
     title: str
@@ -71,6 +85,11 @@ class PostGetSchema(PostBaseSchema):
     created_at: datetime
 
 
+class PostUpdateSchema(OrmBaseModel):
+    title: Optional[str]
+    body: Optional[str]
+
+
 class CommentBaseSchema(OrmBaseModel):
     user_id: int
     post_id: int
@@ -84,3 +103,7 @@ class CommentCreateSchema(CommentBaseSchema):
 class CommentGetSchema(CommentBaseSchema):
     id: int
     created_at: datetime
+
+
+class CommentUpdateSchema(OrmBaseModel):
+    body: Optional[str]

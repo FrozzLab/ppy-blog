@@ -13,7 +13,7 @@ def create_user(session, new_user: models.User):
 
 
 def create_blog(session, new_blog_schema: schemas.BlogCreateSchema, user_id: int):
-    user_creator_model = get_user_by_id(session)
+    user_creator_model = get_user_by_id(session, user_id)
 
     if user_creator_model is None:
         raise HTTPException(status_code=404, detail="Blog owner does not exist")
@@ -82,10 +82,10 @@ def get_comment_by_id(session, comment_id: int):
 
 
 def get_user_blogs(session, user_id):
-    return session.query(models.Blog).\
-                   join(models.UserBlog, models.UserBlog.blog_id == models.Blog.id).\
-                   filter(models.UserBlog.user_id == user_id).\
-                   all()
+    return session.query(models.Blog). \
+        join(models.UserBlog, models.UserBlog.blog_id == models.Blog.id). \
+        filter(models.UserBlog.user_id == user_id). \
+        all()
 
 
 def get_blog_posts(session, blog_id):
@@ -101,17 +101,97 @@ def get_user_comments(session, user_id):
 
 
 def get_user_followers(session, user_id):
-    return session.query(models.User).\
-                   join(models.UserFollowing, models.UserFollowing.follower_id == models.User.id).\
-                   filter(models.UserFollowing.user_id == user_id).\
-                   all()
+    return session.query(models.User). \
+        join(models.UserFollowing, models.UserFollowing.follower_id == models.User.id). \
+        filter(models.UserFollowing.user_id == user_id). \
+        all()
 
 
 def get_user_follows(session, user_id):
-    return session.query(models.User).\
-                   join(models.UserFollowing, models.UserFollowing.user_id == models.User.id).\
-                   filter(models.UserFollowing.follower_id == user_id).\
-                   all()
+    return session.query(models.User). \
+        join(models.UserFollowing, models.UserFollowing.user_id == models.User.id). \
+        filter(models.UserFollowing.follower_id == user_id). \
+        all()
+
+
+def get_all_users(session):
+    return session.query(models.User).all()
+
+
+def get_all_blogs(session):
+    return session.query(models.Blog).all()
+
+
+def get_all_posts(session):
+    return session.query(models.Post).all()
+
+
+def get_all_comments(session):
+    return session.query(models.Comment).all()
+
+
+def update_user_by_id(session, user_update_data, user_id):
+    given_user_model = get_user_by_id(session, user_id)
+
+    if given_user_model is None:
+        raise HTTPException(status_code=404, detail="User queued for update does not exist")
+
+    for var, value in vars(user_update_data).items():
+        setattr(given_user_model, var, value) if value else None
+
+    session.add(given_user_model)
+    session.commit()
+    session.refresh(given_user_model)
+
+    return given_user_model
+
+
+def update_blog_by_id(session, blog_update_data, blog_id):
+    given_blog_model = get_blog_by_id(session, blog_id)
+
+    if given_blog_model is None:
+        raise HTTPException(status_code=404, detail="Blog queued for update does not exist")
+
+    for var, value in vars(blog_update_data).items():
+        setattr(given_blog_model, var, value) if value else None
+
+    session.add(given_blog_model)
+    session.commit()
+    session.refresh(given_blog_model)
+
+    return given_blog_model
+
+
+def update_post_by_id(session, post_update_data, post_id):
+    given_post_model = get_post_by_id(session, post_id)
+
+    if given_post_model is None:
+        raise HTTPException(status_code=404, detail="Post queued for update does not exist")
+
+    for var, value in vars(post_update_data).items():
+        setattr(given_post_model, var, value) if value else None
+
+    session.add(given_post_model)
+    session.commit()
+    session.refresh(given_post_model)
+
+    return given_post_model
+
+
+def update_comment_by_id(session, comment_update_data, comment_id):
+    given_comment_model = get_comment_by_id(session, comment_id)
+
+    if given_comment_model is None:
+        raise HTTPException(status_code=404, detail="Comment queued for update does not exist")
+
+    for var, value in vars(comment_update_data).items():
+        setattr(given_comment_model, var, value) if value else None
+
+    session.add(given_comment_model)
+    session.commit()
+    session.refresh(given_comment_model)
+
+    return given_comment_model
 
 
 def delete_user_by_id(session, user_id: int):
