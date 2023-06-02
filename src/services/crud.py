@@ -103,7 +103,7 @@ def create_post_like(session, new_like_schema: schemas.PostLikeCreateSchema):
 
 
 def create_comment_like(session, new_like_schema: schemas.CommentLikeCreateSchema):
-    new_like_model = models.BlogLike(**new_like_schema.dict(), liked_at=datetime.utcnow())
+    new_like_model = models.CommentLike(**new_like_schema.dict(), liked_at=datetime.utcnow())
     user_model = get_user_by_id(session, new_like_schema.user_id)
     comment_model = get_comment_by_id(session, new_like_schema.comment_id)
 
@@ -118,6 +118,60 @@ def create_comment_like(session, new_like_schema: schemas.CommentLikeCreateSchem
     session.refresh(new_like_model)
 
     return new_like_model
+
+
+def create_blog_save(session, new_save_schema: schemas.BlogSaveCreateSchema):
+    new_save_model = models.BlogSave(**new_save_schema.dict(), saved_at=datetime.utcnow())
+    user_model = get_user_by_id(session, new_save_schema.user_id)
+    blog_model = get_blog_by_id(session, new_save_schema.blog_id)
+
+    if user_model is None:
+        raise HTTPException(status_code=404, detail="Saving user does not exist")
+
+    if blog_model is None:
+        raise HTTPException(status_code=404, detail="Saved blog does not exist")
+
+    session.add(new_save_model)
+    session.commit()
+    session.refresh(new_save_model)
+
+    return new_save_model
+
+
+def create_post_save(session, new_save_schema: schemas.PostSaveCreateSchema):
+    new_save_model = models.PostSave(**new_save_schema.dict(), saved_at=datetime.utcnow())
+    user_model = get_user_by_id(session, new_save_schema.user_id)
+    post_model = get_post_by_id(session, new_save_schema.post_id)
+
+    if user_model is None:
+        raise HTTPException(status_code=404, detail="Saving user does not exist")
+
+    if post_model is None:
+        raise HTTPException(status_code=404, detail="Saved post does not exist")
+
+    session.add(new_save_model)
+    session.commit()
+    session.refresh(new_save_model)
+
+    return new_save_model
+
+
+def create_comment_save(session, new_save_schema: schemas.CommentSaveCreateSchema):
+    new_save_model = models.CommentSave(**new_save_schema.dict(), saved_at=datetime.utcnow())
+    user_model = get_user_by_id(session, new_save_schema.user_id)
+    comment_model = get_comment_by_id(session, new_save_schema.comment_id)
+
+    if user_model is None:
+        raise HTTPException(status_code=404, detail="Saving user does not exist")
+
+    if comment_model is None:
+        raise HTTPException(status_code=404, detail="Saved comment does not exist")
+
+    session.add(new_save_model)
+    session.commit()
+    session.refresh(new_save_model)
+
+    return new_save_model
 
 
 def get_user_by_id(session, user_id: int):
@@ -284,4 +338,58 @@ def delete_post_by_id(session, post_id: int):
 
 def delete_comment_by_id(session, comment_id: int):
     session.query(models.Comment).filter(models.Comment.id == comment_id).delete()
+    session.commit()
+
+
+def delete_blog_like_by_id(session, user_id: int, blog_id: int):
+    session.query(models.BlogLike). \
+        filter(models.BlogLike.user_id == user_id,
+               models.BlogLike.blog_id == blog_id). \
+        delete()
+
+    session.commit()
+
+
+def delete_post_like_by_id(session, user_id: int, post_id: int):
+    session.query(models.PostLike). \
+        filter(models.PostLike.user_id == user_id,
+               models.PostLike.post_id == post_id). \
+        delete()
+
+    session.commit()
+
+
+def delete_comment_like_by_id(session, user_id: int, comment_id: int):
+    session.query(models.CommentLike). \
+        filter(models.CommentLike.user_id == user_id,
+               models.CommentLike.comment_id == comment_id). \
+        delete()
+
+    session.commit()
+
+
+def delete_blog_save_by_id(session, user_id: int, blog_id: int):
+    session.query(models.BlogSave). \
+        filter(models.BlogSave.user_id == user_id,
+               models.BlogSave.blog_id == blog_id). \
+        delete()
+
+    session.commit()
+
+
+def delete_post_save_by_id(session, user_id: int, post_id: int):
+    session.query(models.PostSave). \
+        filter(models.PostSave.user_id == user_id,
+               models.PostSave.post_id == post_id). \
+        delete()
+
+    session.commit()
+
+
+def delete_comment_save_by_id(session, user_id: int, comment_id: int):
+    session.query(models.CommentSave). \
+        filter(models.CommentSave.user_id == user_id,
+               models.CommentSave.comment_id == comment_id). \
+        delete()
+
     session.commit()

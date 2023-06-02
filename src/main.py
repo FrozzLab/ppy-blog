@@ -40,6 +40,10 @@ tags_metadata = [
         "name": "like",
         "description": "Operations related to likes.",
     },
+    {
+        "name": "save",
+        "description": "Operations related to saves.",
+    }
 ]
 
 app = FastAPI(openapi_tags=tags_metadata)
@@ -80,6 +84,21 @@ def create_post_like(new_post_like_schema: schemas.PostLikeCreateSchema):
 @app.post("/api/createCommentLike", status_code=201, response_model=schemas.CommentLikeGetSchema, tags=["like"])
 def create_comment_like(new_comment_like_schema: schemas.CommentLikeCreateSchema):
     return crud.create_comment_like(session, new_comment_like_schema)
+
+
+@app.post("/api/createBlogSave", status_code=201, response_model=schemas.BlogSaveGetSchema, tags=["save"])
+def create_blog_save(new_blog_save_schema: schemas.BlogSaveCreateSchema):
+    return crud.create_blog_save(session, new_blog_save_schema)
+
+
+@app.post("/api/createPostSave", status_code=201, response_model=schemas.PostSaveGetSchema, tags=["save"])
+def create_post_save(new_post_save_schema: schemas.PostSaveCreateSchema):
+    return crud.create_post_save(session, new_post_save_schema)
+
+
+@app.post("/api/createCommentSave", status_code=201, response_model=schemas.CommentSaveGetSchema, tags=["save"])
+def create_comment_save(new_comment_save_schema: schemas.CommentSaveCreateSchema):
+    return crud.create_comment_save(session, new_comment_save_schema)
 
 
 @app.get("/api/getUser/{user_id}", response_model=schemas.UserGetSchema, tags=["user"])
@@ -257,3 +276,33 @@ def delete_post_by_id(post_id: int):
 @app.delete("/api/deleteComment/{comment_id}", status_code=204, tags=["comment"])
 def delete_comment_by_id(comment_id: int):
     crud.delete_comment_by_id(session, comment_id)
+
+
+@app.delete("/api/deleteBlogLike/{user_id}/{blog_id}", status_code=204, tags=["like"])
+def delete_blog_like_by_id(user_id: int, blog_id: int):
+    crud.delete_blog_like_by_id(session, user_id, blog_id)
+
+
+@app.delete("/api/deletePostLike/{user_id}/{post_id}", status_code=204, tags=["like"])
+def delete_post_like_by_id(user_id: int, post_id: int):
+    crud.delete_post_like_by_id(session, user_id, post_id)
+
+
+@app.delete("/api/deleteCommentLike/{user_id}/{comment_id}", status_code=204, tags=["like"])
+def delete_comment_like_by_id(user_id: int, comment_id: int):
+    crud.delete_comment_like_by_id(session, user_id, comment_id)
+
+
+@app.delete("/api/deleteBlogSave/{user_id}/{blog_id}", status_code=204, tags=["save"])
+def delete_blog_save_by_id(user_id: int, blog_id: int):
+    crud.delete_blog_save_by_id(session, user_id, blog_id)
+
+
+@app.delete("/api/deletePostSave/{user_id}/{post_id}", status_code=204, tags=["save"])
+def delete_post_save_by_id(user_id: int, post_id: int):
+    crud.delete_post_save_by_id(session, user_id, post_id)
+
+
+@app.delete("/api/deleteCommentSave/{user_id}/{comment_id}", status_code=204, tags=["save"])
+def delete_comment_save_by_id(user_id: int, comment_id: int):
+    crud.delete_comment_save_by_id(session, user_id, comment_id)

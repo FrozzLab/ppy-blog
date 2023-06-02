@@ -140,3 +140,31 @@ class CommentLikeCreateSchema(LikeBaseSchema):
 
 class CommentLikeGetSchema(CommentLikeCreateSchema):
     liked_at: datetime
+
+
+class SaveBaseSchema(OrmBaseModel):
+    user_id: int
+
+
+class BlogSaveCreateSchema(SaveBaseSchema):
+    blog_id: int
+
+
+class BlogSaveGetSchema(BlogSaveCreateSchema):
+    saved_at: datetime
+
+
+class PostSaveCreateSchema(SaveBaseSchema):
+    post_id: int
+
+
+class PostSaveGetSchema(PostSaveCreateSchema):
+    saved_at: datetime
+
+
+class CommentSaveCreateSchema(SaveBaseSchema):
+    comment_id: int
+
+
+class CommentSaveGetSchema(CommentSaveCreateSchema):
+    saved_at: datetime
