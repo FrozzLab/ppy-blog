@@ -4,9 +4,9 @@ from fastapi import FastAPI, HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from models import models
-from schemas import schemas
-from services import crud
+from src.backend.models import models
+from src.backend.schemas import schemas
+from src.backend.services import crud
 
 DB_URL = "sqlite:///D:\\blog.db"
 

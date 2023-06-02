@@ -3,8 +3,8 @@ from datetime import datetime
 from fastapi import HTTPException
 from sqlalchemy import desc, func
 
-from src.models import models
-from src.schemas import schemas
+from src.backend.models import models
+from src.backend.schemas import schemas
 
 
 def create_user(session, new_user: models.User):
