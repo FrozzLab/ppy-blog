@@ -34,6 +34,11 @@ class UserUpdateSchema(OrmBaseModel):
     country: Optional[str]
 
 
+class UserLoginSchema(OrmBaseModel):
+    profile_name: str
+    password: str
+
+
 class UserFollowingSchema(OrmBaseModel):
     user_id: int
     follower_id: int
@@ -107,3 +112,31 @@ class CommentGetSchema(CommentBaseSchema):
 
 class CommentUpdateSchema(OrmBaseModel):
     body: Optional[str]
+
+
+class LikeBaseSchema(OrmBaseModel):
+    user_id: int
+
+
+class BlogLikeCreateSchema(LikeBaseSchema):
+    blog_id: int
+
+
+class BlogLikeGetSchema(BlogLikeCreateSchema):
+    liked_at: datetime
+
+
+class PostLikeCreateSchema(LikeBaseSchema):
+    post_id: int
+
+
+class PostLikeGetSchema(PostLikeCreateSchema):
+    liked_at: datetime
+
+
+class CommentLikeCreateSchema(LikeBaseSchema):
+    comment_id: int
+
+
+class CommentLikeGetSchema(CommentLikeCreateSchema):
+    liked_at: datetime

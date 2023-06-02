@@ -36,34 +36,53 @@ tags_metadata = [
         "name": "comment",
         "description": "Operations related to comments.",
     },
+    {
+        "name": "like",
+        "description": "Operations related to likes.",
+    },
 ]
 
 app = FastAPI(openapi_tags=tags_metadata)
 
 
-@app.post("/api/post/createUser", status_code=201, response_model=schemas.UserGetSchema, tags=["user"])
+@app.post("/api/createUser", status_code=201, response_model=schemas.UserGetSchema, tags=["user"])
 def create_user(new_user: schemas.UserCreateSchema):
     new_user_model = models.User(**new_user.dict(), signup_date=datetime.utcnow())
     crud.create_user(session, new_user_model)
     return new_user_model
 
 
-@app.post("/api/post/createBlog", status_code=201, response_model=schemas.BlogGetSchema, tags=["blog"])
+@app.post("/api/createBlog", status_code=201, response_model=schemas.BlogGetSchema, tags=["blog"])
 def create_blog(new_blog: schemas.BlogCreateSchema, user_id: int):
     return crud.create_blog(session, new_blog, user_id)
 
 
-@app.post("/api/post/createPost", status_code=201, response_model=schemas.PostGetSchema, tags=["post"])
+@app.post("/api/createPost", status_code=201, response_model=schemas.PostGetSchema, tags=["post"])
 def create_post(new_post: schemas.PostCreateSchema):
     return crud.create_post(session, new_post)
 
 
-@app.post("/api/post/createComment", status_code=201, response_model=schemas.CommentGetSchema, tags=["comment"])
+@app.post("/api/createComment", status_code=201, response_model=schemas.CommentGetSchema, tags=["comment"])
 def create_comment(new_comment_schema: schemas.CommentCreateSchema):
     return crud.create_comment(session, new_comment_schema)
 
 
-@app.get("/api/get/getUser/{user_id}", response_model=schemas.UserGetSchema, tags=["user"])
+@app.post("/api/createBlogLike", status_code=201, response_model=schemas.BlogLikeGetSchema, tags=["like"])
+def create_blog_like(new_blog_like_schema: schemas.BlogLikeCreateSchema):
+    return crud.create_blog_like(session, new_blog_like_schema)
+
+
+@app.post("/api/createPostLike", status_code=201, response_model=schemas.PostLikeGetSchema, tags=["like"])
+def create_post_like(new_post_like_schema: schemas.PostLikeCreateSchema):
+    return crud.create_post_like(session, new_post_like_schema)
+
+
+@app.post("/api/createCommentLike", status_code=201, response_model=schemas.CommentLikeGetSchema, tags=["like"])
+def create_comment_like(new_comment_like_schema: schemas.CommentLikeCreateSchema):
+    return crud.create_comment_like(session, new_comment_like_schema)
+
+
+@app.get("/api/getUser/{user_id}", response_model=schemas.UserGetSchema, tags=["user"])
 def get_user_by_id(user_id: int):
     user = crud.get_user_by_id(session, user_id)
     if user is None:
@@ -71,7 +90,16 @@ def get_user_by_id(user_id: int):
     return user
 
 
-@app.get("/api/get/getBlog/{blog_id}", response_model=schemas.BlogGetSchema, tags=["blog"])
+# Bad solution since the password is shown in plaintext in uri, will fix later
+@app.get("/api/getUser/login", response_model=schemas.UserGetSchema, tags=["user"])
+def get_user_by_name_and_password(user_profile_name: str, user_password: str):
+    user = crud.get_user_by_name_and_password(session, user_profile_name, user_password)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+
+@app.get("/api/getBlog/{blog_id}", response_model=schemas.BlogGetSchema, tags=["blog"])
 def get_blog_by_id(blog_id: int):
     blog = crud.get_blog_by_id(session, blog_id)
     if blog is None:
@@ -79,7 +107,7 @@ def get_blog_by_id(blog_id: int):
     return blog
 
 
-@app.get("/api/get/getBlog/{blog_title}", response_model=schemas.BlogGetSchema, tags=["blog"])
+@app.get("/api/getBlog/{blog_title}", response_model=schemas.BlogGetSchema, tags=["blog"])
 def get_blog_by_title(blog_title: str):
     blog = crud.get_blog_by_title(session, blog_title)
     if blog is None:
@@ -87,7 +115,7 @@ def get_blog_by_title(blog_title: str):
     return blog
 
 
-@app.get("/api/get/getPost/{post_id}", response_model=schemas.PostGetSchema, tags=["post"])
+@app.get("/api/getPost/{post_id}", response_model=schemas.PostGetSchema, tags=["post"])
 def get_post_by_id(post_id: int):
     post = crud.get_post_by_id(session, post_id)
     if post is None:
@@ -95,7 +123,7 @@ def get_post_by_id(post_id: int):
     return post
 
 
-@app.get("/api/get/getComment/{comment_id}", response_model=schemas.CommentGetSchema, tags=["comment"])
+@app.get("/api/getComment/{comment_id}", response_model=schemas.CommentGetSchema, tags=["comment"])
 def get_comment_by_id(comment_id: int):
     comment = crud.get_comment_by_id(session, comment_id)
     if comment is None:
@@ -103,7 +131,7 @@ def get_comment_by_id(comment_id: int):
     return comment
 
 
-@app.get("/api/get/getUserBlogs/{user_id}", response_model=list[schemas.BlogGetSchema], tags=["blog"])
+@app.get("/api/getUserBlogs/{user_id}", response_model=list[schemas.BlogGetSchema], tags=["blog"])
 def get_user_blogs(user_id: int):
     user_blogs = crud.get_user_blogs(session, user_id)
     if not user_blogs:
@@ -111,7 +139,7 @@ def get_user_blogs(user_id: int):
     return user_blogs
 
 
-@app.get("/api/get/getBlogPosts/{blog_id}", response_model=list[schemas.PostGetSchema], tags=["post"])
+@app.get("/api/getBlogPosts/{blog_id}", response_model=list[schemas.PostGetSchema], tags=["post"])
 def get_blog_posts(blog_id: int):
     blog_posts = crud.get_blog_posts(session, blog_id)
     if not blog_posts:
@@ -119,7 +147,7 @@ def get_blog_posts(blog_id: int):
     return blog_posts
 
 
-@app.get("/api/get/getPostComments/{post_id}", response_model=list[schemas.CommentGetSchema], tags=["comment"])
+@app.get("/api/getPostComments/{post_id}", response_model=list[schemas.CommentGetSchema], tags=["comment"])
 def get_post_comments(post_id: int):
     post_comments = crud.get_post_comments(session, post_id)
     if not post_comments:
@@ -127,7 +155,7 @@ def get_post_comments(post_id: int):
     return post_comments
 
 
-@app.get("/api/get/getUserComments/{user_id}", response_model=list[schemas.CommentGetSchema], tags=["comment"])
+@app.get("/api/getUserComments/{user_id}", response_model=list[schemas.CommentGetSchema], tags=["comment"])
 def get_user_comments(user_id: int):
     user_comments = crud.get_user_comments(session, user_id)
     if not user_comments:
@@ -135,7 +163,7 @@ def get_user_comments(user_id: int):
     return user_comments
 
 
-@app.get("/api/get/getUserFollowers/{user_id}", response_model=list[schemas.UserGetSchema], tags=["user"])
+@app.get("/api/getUserFollowers/{user_id}", response_model=list[schemas.UserGetSchema], tags=["user"])
 def get_user_followers(user_id: int):
     user_followers = crud.get_user_followers(session, user_id)
     if not user_followers:
@@ -143,7 +171,7 @@ def get_user_followers(user_id: int):
     return user_followers
 
 
-@app.get("/api/get/getUserFollows/{user_id}", response_model=list[schemas.UserGetSchema], tags=["user"])
+@app.get("/api/getUserFollows/{user_id}", response_model=list[schemas.UserGetSchema], tags=["user"])
 def get_user_follows(user_id: int):
     user_follows = crud.get_user_follows(session, user_id)
     if not user_follows:
@@ -151,7 +179,7 @@ def get_user_follows(user_id: int):
     return user_follows
 
 
-@app.get("/api/get/getAllUsers", response_model=list[schemas.UserGetSchema], tags=["user"])
+@app.get("/api/getAllUsers", response_model=list[schemas.UserGetSchema], tags=["user"])
 def get_all_users():
     users = crud.get_all_users(session)
     if not users:
@@ -159,7 +187,7 @@ def get_all_users():
     return users
 
 
-@app.get("/api/get/getAllBlogs", response_model=list[schemas.BlogGetSchema], tags=["blog"])
+@app.get("/api/getAllBlogs", response_model=list[schemas.BlogGetSchema], tags=["blog"])
 def get_all_blogs():
     blogs = crud.get_all_blogs(session)
     if not blogs:
@@ -167,7 +195,7 @@ def get_all_blogs():
     return blogs
 
 
-@app.get("/api/get/getNMostPopularBlogs", response_model=list[schemas.BlogGetSchema], tags=["blog"])
+@app.get("/api/getNMostPopularBlogs", response_model=list[schemas.BlogGetSchema], tags=["blog"])
 def get_n_most_popular_blogs(amount_to_display: int):
     blogs = crud.get_n_most_popular_blogs(session, amount_to_display)
     if not blogs:
@@ -175,7 +203,7 @@ def get_n_most_popular_blogs(amount_to_display: int):
     return blogs
 
 
-@app.get("/api/get/getAllPosts", response_model=list[schemas.PostGetSchema], tags=["post"])
+@app.get("/api/getAllPosts", response_model=list[schemas.PostGetSchema], tags=["post"])
 def get_all_posts():
     posts = crud.get_all_posts(session)
     if not posts:
@@ -183,7 +211,7 @@ def get_all_posts():
     return posts
 
 
-@app.get("/api/get/getAllComments", response_model=list[schemas.CommentGetSchema], tags=["comment"])
+@app.get("/api/getAllComments", response_model=list[schemas.CommentGetSchema], tags=["comment"])
 def get_all_comments():
     comments = crud.get_all_comments(session)
     if not comments:
@@ -191,41 +219,41 @@ def get_all_comments():
     return comments
 
 
-@app.put("/api/put/updateUser/{user_id}", response_model=schemas.UserGetSchema, tags=["user"])
+@app.put("/api/updateUser/{user_id}", response_model=schemas.UserGetSchema, tags=["user"])
 def update_user_by_id(user_update_data: schemas.UserUpdateSchema, user_id: int):
     return crud.update_user_by_id(session, user_update_data, user_id)
 
 
-@app.put("/api/put/updateBlog/{blog_id}", response_model=schemas.BlogGetSchema, tags=["blog"])
+@app.put("/api/updateBlog/{blog_id}", response_model=schemas.BlogGetSchema, tags=["blog"])
 def update_blog_by_id(blog_update_data: schemas.BlogUpdateSchema, blog_id: int):
     return crud.update_blog_by_id(session, blog_update_data, blog_id)
 
 
-@app.put("/api/put/updatePost/{post_id}", response_model=schemas.PostGetSchema, tags=["post"])
+@app.put("/api/updatePost/{post_id}", response_model=schemas.PostGetSchema, tags=["post"])
 def update_post_by_id(post_update_data: schemas.PostUpdateSchema, post_id: int):
     return crud.update_post_by_id(session, post_update_data, post_id)
 
 
-@app.put("/api/put/updateComment/{comment_id}", response_model=schemas.CommentGetSchema, tags=["comment"])
+@app.put("/api/updateComment/{comment_id}", response_model=schemas.CommentGetSchema, tags=["comment"])
 def update_comment_by_id(comment_update_data: schemas.CommentUpdateSchema, comment_id: int):
     return crud.update_comment_by_id(session, comment_update_data, comment_id)
 
 
-@app.delete("/api/delete/deleteUser/{user_id}", status_code=204, tags=["user"])
+@app.delete("/api/deleteUser/{user_id}", status_code=204, tags=["user"])
 def delete_user_by_id(user_id: int):
     crud.delete_user_by_id(session, user_id)
 
 
-@app.delete("/api/delete/deleteBlog/{blog_id}", status_code=204, tags=["blog"])
+@app.delete("/api/deleteBlog/{blog_id}", status_code=204, tags=["blog"])
 def delete_blog_by_id(blog_id: int):
     crud.delete_blog_by_id(session, blog_id)
 
 
-@app.delete("/api/delete/deletePost/{post_id}", status_code=204, tags=["post"])
+@app.delete("/api/deletePost/{post_id}", status_code=204, tags=["post"])
 def delete_post_by_id(post_id: int):
     crud.delete_post_by_id(session, post_id)
 
 
-@app.delete("/api/delete/deleteComment/{comment_id}", status_code=204, tags=["comment"])
+@app.delete("/api/deleteComment/{comment_id}", status_code=204, tags=["comment"])
 def delete_comment_by_id(comment_id: int):
     crud.delete_comment_by_id(session, comment_id)

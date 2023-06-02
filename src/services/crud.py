@@ -66,8 +66,68 @@ def create_comment(session, new_comment_schema: schemas.CommentCreateSchema):
     return new_comment_model
 
 
+def create_blog_like(session, new_like_schema: schemas.BlogLikeCreateSchema):
+    new_like_model = models.BlogLike(**new_like_schema.dict(), liked_at=datetime.utcnow())
+    user_model = get_user_by_id(session, new_like_schema.user_id)
+    blog_model = get_blog_by_id(session, new_like_schema.blog_id)
+
+    if user_model is None:
+        raise HTTPException(status_code=404, detail="Liking user does not exist")
+
+    if blog_model is None:
+        raise HTTPException(status_code=404, detail="Liked blog does not exist")
+
+    session.add(new_like_model)
+    session.commit()
+    session.refresh(new_like_model)
+
+    return new_like_model
+
+
+def create_post_like(session, new_like_schema: schemas.PostLikeCreateSchema):
+    new_like_model = models.PostLike(**new_like_schema.dict(), liked_at=datetime.utcnow())
+    user_model = get_user_by_id(session, new_like_schema.user_id)
+    post_model = get_post_by_id(session, new_like_schema.post_id)
+
+    if user_model is None:
+        raise HTTPException(status_code=404, detail="Liking user does not exist")
+
+    if post_model is None:
+        raise HTTPException(status_code=404, detail="Liked post does not exist")
+
+    session.add(new_like_model)
+    session.commit()
+    session.refresh(new_like_model)
+
+    return new_like_model
+
+
+def create_comment_like(session, new_like_schema: schemas.CommentLikeCreateSchema):
+    new_like_model = models.BlogLike(**new_like_schema.dict(), liked_at=datetime.utcnow())
+    user_model = get_user_by_id(session, new_like_schema.user_id)
+    comment_model = get_comment_by_id(session, new_like_schema.comment_id)
+
+    if user_model is None:
+        raise HTTPException(status_code=404, detail="Liking user does not exist")
+
+    if comment_model is None:
+        raise HTTPException(status_code=404, detail="Liked comment does not exist")
+
+    session.add(new_like_model)
+    session.commit()
+    session.refresh(new_like_model)
+
+    return new_like_model
+
+
 def get_user_by_id(session, user_id: int):
     return session.query(models.User).filter(models.User.id == user_id).first()
+
+
+def get_user_by_name_and_password(session, user_profile_name: str, user_password: str):
+    return session.query(models.User). \
+        filter(models.User.profile_name == user_profile_name, models.User.password == user_password). \
+        first()
 
 
 def get_blog_by_id(session, blog_id: int):
