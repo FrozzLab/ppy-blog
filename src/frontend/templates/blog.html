@@ -3,9 +3,31 @@
 <head>
     <link href="{{ url_for('static', path='/style.css') }}" rel="stylesheet">
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>{{ blog.title }}</title>
 </head>
 <body>
-    <h1>Blog Page</h1>
+    <header>
+        <h1 id="blog_header">{{ blog.title }}</h1>
+        <div id="user_buttons_div">
+            <button class="user_button">Login</button>
+            <button class="user_button">Register</button>
+        </div>       
+    </header>
+    
+    <main>
+        {% for post in posts %}
+        <div class="post_div">
+            <div class="post_header">
+                <h3 style="margin-left: 20px;">{{ post.title }}</h3>
+            </div>
+            <p style="margin-left: 20px;">{{ post.body }}</p>
+        </div>
+        {% endfor %}
+    </main>
+
+    <footer>
+        <p>Authors: <a href="https://github.com/FrozzLab" target="_blank" style="color: aqua">FrozzLab</a>,  
+            <a href="https://github.com/JakubPiwowarczyk" target="_blank" style="color: aqua">JakubPiwowarczyk</a></p>
+    </footer>
 </body>
 </html>

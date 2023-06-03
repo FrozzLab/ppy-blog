@@ -48,10 +48,27 @@ main{
     border-bottom: 3px black solid;
     background-color: #0c1927;
     overflow: auto;
+    cursor: pointer;
 }
 
 .blog_li_div:hover{
     background-color: #18324e;
+}
+
+.post_div{
+    background-color: #0c1927;
+    height: auto;
+    width: 50%;
+    border: 3px black solid;
+    border-radius: 10px;
+    margin: auto;
+    margin-bottom: 20px;
+}
+
+.post_header{
+    background-color: #18324e;
+    overflow: auto;
+    border-bottom: 3px black solid;
 }
 
 footer{
@@ -59,4 +76,17 @@ footer{
     background-color: #18324e;
     border-top: 3px black solid;
     text-align: center;
+}
+
+a:link{
+    text-decoration: none;
+}
+
+a:active{
+    text-decoration: none;
+}
+
+a:visited{
+    color: #99d6ff;
+    text-decoration: none;
 }

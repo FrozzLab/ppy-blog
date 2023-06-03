@@ -18,8 +18,8 @@ async def get_home_page(req: Request):
     return templates.TemplateResponse("index.html", {"request": req, "blogs": blogs.json()})
 
 
-@app.get("/blog/blog-page/{blog_id}}", response_class=HTMLResponse)
+@app.get("/blog/blog-page/{blog_id}", response_class=HTMLResponse)
 async def get_blog_page(req: Request, blog_id: int):
     blog = requests.get(f'{RESTAPI_URL}/getBlog/{blog_id}')
     posts = requests.get(f'{RESTAPI_URL}/getBlogPosts/{blog_id}')
-    return templates.TemplateResponse("blog.html", {"request": req, "blog": blog, "posts": posts})
+    return templates.TemplateResponse("blog.html", {"request": req, "blog": blog.json(), "posts": posts.json()})
