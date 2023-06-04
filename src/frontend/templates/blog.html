@@ -9,8 +9,8 @@
     <header>
         <h1 id="blog_header">{{ blog.title }}</h1>
         <div id="user_buttons_div">
-            <button class="user_button">Login</button>
-            <button class="user_button">Register</button>
+            <a href="/blog/login-page"><button class="user_button" type="button">Login</button></a>
+            <a href="/blog/register-page"><button class="user_button">Register</button></a>
         </div>       
     </header>
     
@@ -21,6 +21,7 @@
                 <h3 style="margin-left: 20px;">{{ post.title }}</h3>
             </div>
             <p style="margin-left: 20px;">{{ post.body }}</p>
+            <a href="/docs"><p style="margin-left: 20px;">See comments</p></a>
         </div>
         {% endfor %}
     </main>

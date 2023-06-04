@@ -1,5 +1,6 @@
 import requests
-from fastapi import FastAPI, Request
+from typing import Annotated
+from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -14,8 +15,34 @@ templates = Jinja2Templates(directory="templates")
 
 @app.get("/blog/home", response_class=HTMLResponse)
 async def get_home_page(req: Request):
-    blogs = requests.get(f'{RESTAPI_URL}/getNMostPopularBlogs?amount_to_display=10')
-    return templates.TemplateResponse("index.html", {"request": req, "blogs": blogs.json()})
+    blogs = requests.get(f'{RESTAPI_URL}/getNMostPopularBlogs?amount_to_display=10').json()
+    return templates.TemplateResponse("index.html", {"request": req, "blogs": blogs})
+
+
+@app.get("/blog/login-page", response_class=HTMLResponse)
+async def get_login_page(req: Request):
+    return templates.TemplateResponse("login.html", {"request": req})
+
+
+@app.post("/blog/login-user")
+async def login_user(req: Request, user_name: Annotated[str, Form()], password: Annotated[str, Form()]):
+    user = requests.get(f'{RESTAPI_URL}/getUser/login?user_profile_name={user_name}&user_password={password}')
+    blogs = requests.get(f'{RESTAPI_URL}/getNMostPopularBlogs?amount_to_display=10').json()
+    return templates.TemplateResponse("index.html", {"request": req, "blogs": blogs})
+
+
+@app.get("/blog/register-page", response_class=HTMLResponse)
+async def get_register_page(req: Request):
+    return templates.TemplateResponse("register.html", {"request": req})
+
+
+# Long as hell, but works, will leave it for now
+@app.post("/blog/register-user", response_class=HTMLResponse)
+async def register_user(req: Request, first_name: Annotated[str, Form()], last_name: Annotated[str, Form()], user_name: Annotated[str, Form()], email: Annotated[str, Form()], country: Annotated[str, Form()], password: Annotated[str, Form()]):
+    user_to_registry = {"first_name": first_name, "last_name": last_name, "profile_name": user_name, "email": email, "country": country, "password": password}
+    x = requests.post(f'{RESTAPI_URL}/createUser', json=user_to_registry)
+    blogs = requests.get(f'{RESTAPI_URL}/getNMostPopularBlogs?amount_to_display=10').json()
+    return templates.TemplateResponse("index.html", {"request": req, "blogs": blogs})
 
 
 @app.get("/blog/blog-page/{blog_id}", response_class=HTMLResponse)
