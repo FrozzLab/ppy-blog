@@ -8,7 +8,9 @@ from src.backend.models import models
 from src.backend.schemas import schemas
 from src.backend.services import crud
 
-DB_URL = "sqlite:///D:\\blog.db"
+# TODO change this before commit
+# DB_URL = "sqlite:///D:\\blog.db"
+DB_URL = "sqlite:///C:\\Users\\jakub\\Desktop\\studia\\semestr4\\PPY\\py_project\\blog.db"
 
 engine = create_engine(DB_URL, connect_args={"check_same_thread": False})
 connection = engine.connect()
@@ -110,7 +112,7 @@ def get_user_by_id(user_id: int):
 
 
 # Bad solution since the password is shown in plaintext in uri, will fix later
-@app.get("/api/getUser/login", response_model=schemas.UserGetSchema, tags=["user"])
+@app.get("/api/getUserByLogin", response_model=schemas.UserGetSchema, tags=["user"])
 def get_user_by_name_and_password(user_profile_name: str, user_password: str):
     user = crud.get_user_by_name_and_password(session, user_profile_name, user_password)
     if user is None:

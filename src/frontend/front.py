@@ -26,7 +26,7 @@ async def get_login_page(req: Request):
 
 @app.post("/blog/login-user")
 async def login_user(req: Request, user_name: Annotated[str, Form()], password: Annotated[str, Form()]):
-    user = requests.get(f'{RESTAPI_URL}/getUser/login?user_profile_name={user_name}&user_password={password}')
+    user = requests.get(f'{RESTAPI_URL}/getUserByLogin?user_profile_name={user_name}&user_password={password}')
     blogs = requests.get(f'{RESTAPI_URL}/getNMostPopularBlogs?amount_to_display=10').json()
     return templates.TemplateResponse("index.html", {"request": req, "blogs": blogs})
 
