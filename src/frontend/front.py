@@ -1,5 +1,6 @@
-import requests
 from typing import Annotated
+
+import requests
 from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
