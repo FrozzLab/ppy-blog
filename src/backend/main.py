@@ -118,6 +118,14 @@ def get_user_by_name_and_password(user_profile_name: str, user_password: str):
     return user
 
 
+@app.get("/api/getUsersByBlog/{blog_id}", response_model=list[schemas.UserGetSchema], tags=["user"])
+def get_users_by_blog(blog_id: int):
+    users = crud.get_users_by_blog(session, blog_id)
+    if not users:
+        raise HTTPException(status_code=404, detail="Users not found")
+    return users
+
+
 @app.get("/api/getBlog/{blog_id}", response_model=schemas.BlogGetSchema, tags=["blog"])
 def get_blog_by_id(blog_id: int):
     blog = crud.get_blog_by_id(session, blog_id)

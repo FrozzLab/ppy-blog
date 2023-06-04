@@ -184,6 +184,13 @@ def get_user_by_name_and_password(session, user_profile_name: str, user_password
         first()
 
 
+def get_users_by_blog(session, blog_id: int):
+    return session.query(models.User). \
+        join(models.UserBlog, models.UserBlog.user_id == models.User.id). \
+        filter(models.UserBlog.blog_id == blog_id). \
+        all()
+
+
 def get_blog_by_id(session, blog_id: int):
     return session.query(models.Blog).filter(models.Blog.id == blog_id).first()
 
