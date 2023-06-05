@@ -98,3 +98,19 @@ async def get_home_page(req: Request, user_id: int, cookie_id: int = Cookie(None
         return templates.TemplateResponse("userPages/selfUser.html", {"request": req, "user": user, "blogs": blogs})
     else:
         return templates.TemplateResponse("userPages/user.html", {"request": req, "user": user, "blogs": blogs, "current_user": current_user.json()})
+
+
+@app.get("/blog/create-blog-page", response_class=HTMLResponse)
+async def get_create_blog_page(req: Request):
+    return templates.TemplateResponse("userPages/createBlog.html", {"request": req})
+
+
+@app.post("/blog/create-blog")
+async def create_blog(req: Request, title: Annotated[str, Form()], description: Annotated[str, Form()], cookie_id: int = Cookie(None)):
+    blog_to_create = {"title": title, "description": description}
+    x = requests.post(f'{RESTAPI_URL}/createBlog?user_id={cookie_id}', json=blog_to_create)
+    if x.status_code != 201:
+        result = {"title": "Creation Failed", "body": x}
+        return templates.TemplateResponse("operationResult.html", {"request": req, "result": result})
+    result = {"title": "Blog has been successfully created", "body": x}
+    return templates.TemplateResponse("operationResult.html", {"request": req, "result": result})
