@@ -70,3 +70,10 @@ async def get_post_comments(req: Request, post_id: int):
         information = [{"body": "This post has no comments yet"}]
         return templates.TemplateResponse("postsComments.html", {"request": req, "post": post.json(), "comments": information})
     return templates.TemplateResponse("postsComments.html", {"request": req, "post": post.json(), "comments": comments.json()})
+
+
+@app.get("/blog/user-page/{user_id}", response_class=HTMLResponse)
+async def get_home_page(req: Request, user_id: int):
+    user = requests.get(f'{RESTAPI_URL}/getUser/{user_id}').json()
+    blogs = requests.get(f'{RESTAPI_URL}/getUserBlogs/{user_id}').json()
+    return templates.TemplateResponse("user.html", {"request": req, "user": user, "blogs": blogs})
