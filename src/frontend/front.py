@@ -77,6 +77,9 @@ async def get_blog_page(req: Request, blog_id: int, cookie_id: int = Cookie(None
             get_user = requests.get(f'{RESTAPI_URL}/getUser/{cookie_id}')
             if get_user.status_code == 200:
                 return templates.TemplateResponse("userPages/blog.html", {"request": req, "blog": blog.json(), "posts": information, "user": get_user.json()})
+        else:
+            information = [{"title": "This blog has no posts yet"}]
+            return templates.TemplateResponse("blog.html", {"request": req, "blog": blog.json(), "posts": information})
     if cookie_id is not None:
         get_user = requests.get(f'{RESTAPI_URL}/getUser/{cookie_id}')
         if get_user.status_code == 200:
