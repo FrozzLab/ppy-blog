@@ -45,7 +45,7 @@ async def get_register_page(req: Request):
 async def register_user(req: Request, first_name: Annotated[str, Form()], last_name: Annotated[str, Form()], user_name: Annotated[str, Form()], email: Annotated[str, Form()], country: Annotated[str, Form()], password: Annotated[str, Form()]):
     user_to_registry = {"first_name": first_name, "last_name": last_name, "profile_name": user_name, "email": email, "country": country, "password": password}
     x = requests.post(f'{RESTAPI_URL}/createUser', json=user_to_registry)
-    if x.status_code != 200:
+    if x.status_code != 201:
         result = {"title": "Register Failed", "body": x}
         return templates.TemplateResponse("operationResult.html", {"request": req, "result": result})
     result = {"title": "Successful Registration", "body": x}
@@ -56,4 +56,17 @@ async def register_user(req: Request, first_name: Annotated[str, Form()], last_n
 async def get_blog_page(req: Request, blog_id: int):
     blog = requests.get(f'{RESTAPI_URL}/getBlog/{blog_id}')
     posts = requests.get(f'{RESTAPI_URL}/getBlogPosts/{blog_id}')
+    if posts.status_code == 404:
+        information = [{"title": "This blog has no posts yet"}]
+        return templates.TemplateResponse("blog.html", {"request": req, "blog": blog.json(), "posts": information})
     return templates.TemplateResponse("blog.html", {"request": req, "blog": blog.json(), "posts": posts.json()})
+
+
+@app.get("/blog/post-comments/{post_id}", response_class=HTMLResponse)
+async def get_post_comments(req: Request, post_id: int):
+    post = requests.get(f'{RESTAPI_URL}/getPost/{post_id}')
+    comments = requests.get(f'{RESTAPI_URL}/getPostComments/{post_id}')
+    if comments.status_code == 404:
+        information = [{"body": "This post has no comments yet"}]
+        return templates.TemplateResponse("postsComments.html", {"request": req, "post": post.json(), "comments": information})
+    return templates.TemplateResponse("postsComments.html", {"request": req, "post": post.json(), "comments": comments.json()})
