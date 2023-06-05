@@ -138,3 +138,19 @@ async def create_blog(req: Request, title: Annotated[str, Form()], description: 
         return templates.TemplateResponse("operationResult.html", {"request": req, "result": result})
     result = {"title": "Blog has been successfully created", "body": x}
     return templates.TemplateResponse("operationResult.html", {"request": req, "result": result})
+
+
+@app.get("/blog/create-post-page/{blog_id}", response_class=HTMLResponse)
+async def get_create_post_page(req: Request, blog_id: int):
+    return templates.TemplateResponse("userPages/createPost.html", {"request": req, "blog_id": blog_id})
+
+
+@app.post("/blog/create-post/{blog_id}")
+async def create_blog(req: Request, blog_id: int, title: Annotated[str, Form()], body: Annotated[str, Form()]):
+    post_to_create = {"blog_id": blog_id, "title": title, "body": body}
+    x = requests.post(f'{RESTAPI_URL}/createPost', json=post_to_create)
+    if x.status_code != 201:
+        result = {"title": "Creation Failed", "body": x}
+        return templates.TemplateResponse("operationResult.html", {"request": req, "result": result})
+    result = {"title": "Post has been successfully created", "body": x}
+    return templates.TemplateResponse("operationResult.html", {"request": req, "result": result})
