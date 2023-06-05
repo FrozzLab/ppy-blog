@@ -68,23 +68,47 @@ async def register_user(req: Request, first_name: Annotated[str, Form()], last_n
 
 
 @app.get("/blog/blog-page/{blog_id}", response_class=HTMLResponse)
-async def get_blog_page(req: Request, blog_id: int):
+async def get_blog_page(req: Request, blog_id: int, cookie_id: int = Cookie(None)):
     blog = requests.get(f'{RESTAPI_URL}/getBlog/{blog_id}')
     posts = requests.get(f'{RESTAPI_URL}/getBlogPosts/{blog_id}')
     if posts.status_code == 404:
         information = [{"title": "This blog has no posts yet"}]
-        return templates.TemplateResponse("blog.html", {"request": req, "blog": blog.json(), "posts": information})
+        if cookie_id is not None:
+            get_user = requests.get(f'{RESTAPI_URL}/getUser/{cookie_id}')
+            if get_user.status_code == 200:
+                return templates.TemplateResponse("userPages/blog.html", {"request": req, "blog": blog.json(), "posts": information, "user": get_user.json()})
+    if cookie_id is not None:
+        get_user = requests.get(f'{RESTAPI_URL}/getUser/{cookie_id}')
+        if get_user.status_code == 200:
+            return templates.TemplateResponse("userPages/blog.html", {"request": req, "blog": blog.json(), "posts": posts.json(), "user": get_user.json()})
     return templates.TemplateResponse("blog.html", {"request": req, "blog": blog.json(), "posts": posts.json()})
 
 
 @app.get("/blog/post-comments/{post_id}", response_class=HTMLResponse)
-async def get_post_comments(req: Request, post_id: int):
+async def get_post_comments(req: Request, post_id: int, cookie_id: int = Cookie(None)):
     post = requests.get(f'{RESTAPI_URL}/getPost/{post_id}')
     comments = requests.get(f'{RESTAPI_URL}/getPostComments/{post_id}')
     if comments.status_code == 404:
         information = [{"body": "This post has no comments yet"}]
-        return templates.TemplateResponse("postsComments.html", {"request": req, "post": post.json(), "comments": information})
-    return templates.TemplateResponse("postsComments.html", {"request": req, "post": post.json(), "comments": comments.json()})
+        if cookie_id is not None:
+            return templates.TemplateResponse("userPages/postsComments.html", {"request": req, "post": post.json(), "comments": information})
+        else:
+            return templates.TemplateResponse("postsComments.html", {"request": req, "post": post.json(), "comments": information})
+    if cookie_id is not None:
+        return templates.TemplateResponse("userPages/postsComments.html", {"request": req, "post": post.json(), "comments": comments.json()})
+    else:
+        return templates.TemplateResponse("postsComments.html", {"request": req, "post": post.json(), "comments": comments.json()})
+
+
+@app.post("/blog/create-comment/{post_id}")
+async def create_blog(req: Request, post_id: int, body: Annotated[str, Form()], cookie_id: int = Cookie(None)):
+    comment_to_create = {"user_id": cookie_id, "post_id": post_id, "body": body}
+    x = requests.post(f'{RESTAPI_URL}/createComment', json=comment_to_create)
+    if x.status_code != 201:
+        result = {"title": "Creation Failed", "body": x}
+        return templates.TemplateResponse("operationResult.html", {"request": req, "result": result})
+    result = {"title": "Comment has been successfully created", "body": x}
+    return templates.TemplateResponse("operationResult.html", {"request": req, "result": result})
 
 
 @app.get("/blog/user-page/{user_id}", response_class=HTMLResponse)

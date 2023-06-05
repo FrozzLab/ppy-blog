@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href="{{ url_for('static', path='/style.css') }}" rel="stylesheet">
+    <meta charset="UTF-8">
+    <title>{{ post.title }} comments</title>
+</head>
+<body>
+    <main>
+        <div class="post_div">
+            <div class="post_header">
+                <h3 style="margin-left: 20px;">{{ post.title }}</h3>
+            </div>
+            <p style="margin-left: 20px; margin-right: 20px;">{{ post.body }}</p>
+            <div style="margin-left: 20px;">
+                <form action="/blog/create-comment/{{ post.id }}" method="post">
+                    <label for="body">Comment:</label>
+                    <input type="text" id="body" name="body">
+                    <input type="submit" value="Comment">
+                </form>
+            </div>
+            {% for comment in comments %}
+            <div class="post_header">
+                <p style="margin-left: 20px; margin-right: 20px;">{{ comment.body }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <footer>
+        <p>Authors: <a href="https://github.com/FrozzLab" target="_blank" style="color: aqua">FrozzLab</a>,  
+            <a href="https://github.com/JakubPiwowarczyk" target="_blank" style="color: aqua">JakubPiwowarczyk</a></p>
+    </footer>
+</body>
+</html>

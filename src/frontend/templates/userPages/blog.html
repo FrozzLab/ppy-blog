@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href="{{ url_for('static', path='/style.css') }}" rel="stylesheet">
+    <meta charset="UTF-8">
+    <title>{{ blog.title }}</title>
+</head>
+<body>
+    <header>
+        <h1 id="blog_header">{{ blog.title }}</h1>
+        <div id="user_buttons_div">
+            <a href="/blog/user-page/{{ user.id }}" style="color: aqua"><p>Hello, {{ user.profile_name }}</p></a>
+        </div>       
+    </header>
+    
+    <main>
+        {% for post in posts %}
+        <div class="post_div">
+            <div class="post_header">
+                <h3 style="margin-left: 20px;">{{ post.title }}</h3>
+            </div>
+            <p style="margin-left: 20px; margin-right: 20px;">{{ post.body }}</p>
+            <a href="/blog/post-comments/{{ post.id }}"><p style="margin-left: 20px;">See comments</p></a>
+        </div>
+        {% endfor %}
+    </main>
+
+    <footer>
+        <p>Authors: <a href="https://github.com/FrozzLab" target="_blank" style="color: aqua">FrozzLab</a>,  
+            <a href="https://github.com/JakubPiwowarczyk" target="_blank" style="color: aqua">JakubPiwowarczyk</a></p>
+    </footer>
+</body>
+</html>
