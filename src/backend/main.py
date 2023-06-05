@@ -8,7 +8,8 @@ from src.backend.models import models
 from src.backend.schemas import schemas
 from src.backend.services import crud
 
-DB_URL = "sqlite:///D:\\blog.db"
+# DB_URL = "sqlite:///D:\\blog.db"
+DB_URL = "sqlite:///C:\\Users\\jakub\\Desktop\\studia\\semestr4\\PPY\\py_project\\blog.db"
 
 engine = create_engine(DB_URL, connect_args={"check_same_thread": False})
 connection = engine.connect()

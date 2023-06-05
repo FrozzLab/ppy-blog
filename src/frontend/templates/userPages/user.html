@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href="{{ url_for('static', path='/style.css') }}" rel="stylesheet">
+    <meta charset="UTF-8">
+    <title>{{ user.profile_name }}</title>
+</head>
+<body>
+    <header>
+        <h1 id="blog_header">{{ user.profile_name }}</h1><br>
+        <div style="float: left; margin-left: 20px;"><p>{{ user.first_name }} {{ user.last_name }}, {{ user.country }}<p> </div>
+        <div id="user_buttons_div">
+            <a href="/blog/user-page/{{ current_user.id }}" style="color: aqua"><p>Hello, {{ current_user.profile_name }}</p></a>
+        </div>
+    </header>
+    
+    <main>
+        <div id="top_blogs_div">
+            <div style="border-bottom: 3px black solid;">
+                <h3 style="margin-left: 20px;">{{ user.profile_name }}'s BLOGS:</h3>
+            </div>
+            {% for blog in blogs %}
+            <a href="/blog/blog-page/{{ blog.id }}">
+                <div class="blog_li_div">
+                    <h4 style="margin-left: 20px;">{{ blog.title }}</h4>
+                    <p style="margin-left: 20px;">"{{ blog.description }}"</p>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </main>
+
+    <footer>
+        <p>Authors: <a href="https://github.com/FrozzLab" target="_blank" style="color: aqua">FrozzLab</a>,  
+            <a href="https://github.com/JakubPiwowarczyk" target="_blank" style="color: aqua">JakubPiwowarczyk</a></p>
+    </footer>
+</body>
+</html>

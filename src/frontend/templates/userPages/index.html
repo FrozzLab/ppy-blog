@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href="{{ url_for('static', path='/style.css') }}" rel="stylesheet">
+    <script src="{{ url_for('static', path='/script.js') }}" type="text/javascript"></script>
+    <meta charset="UTF-8">
+    <title>Home Page</title>
+</head>
+<body>
+    <header>
+        <h1 id="blog_header">PPY-BLOG</h1>
+        <div id="user_buttons_div">
+            <a href="/blog/user-page/{{ user.id }}" style="color: aqua"><p>Hello, {{ user.profile_name }}</p></a>
+        </div>       
+    </header>
+
+    <main>
+        <div id="top_blogs_div">
+            <div style="border-bottom: 3px black solid;">
+                <h3 style="margin-left: 20px;">TOP BLOGS:</h3>
+            </div>
+            {% for blog in blogs %}
+            <a href="/blog/blog-page/{{ blog.id }}">
+                <div class="blog_li_div">
+                    <h4 style="margin-left: 20px;">{{ blog.title }}</h4>
+                    <p style="margin-left: 20px;">"{{ blog.description }}"</p>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </main>
+
+    <footer>
+        <p>Authors: <a href="https://github.com/FrozzLab" target="_blank" style="color: aqua">FrozzLab</a>,  
+            <a href="https://github.com/JakubPiwowarczyk" target="_blank" style="color: aqua">JakubPiwowarczyk</a></p>
+    </footer>
+</body>
+</html>

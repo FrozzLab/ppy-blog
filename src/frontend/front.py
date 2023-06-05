@@ -1,7 +1,7 @@
 from typing import Annotated
 
 import requests
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Request, Form, Cookie
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -15,8 +15,12 @@ templates = Jinja2Templates(directory="templates")
 
 
 @app.get("/blog/home", response_class=HTMLResponse)
-async def get_home_page(req: Request):
+async def get_home_page(req: Request, cookie_id: int = Cookie(None)):
     blogs = requests.get(f'{RESTAPI_URL}/getNMostPopularBlogs?amount_to_display=10').json()
+    if cookie_id is not None:
+        get_user = requests.get(f'{RESTAPI_URL}/getUser/{cookie_id}')
+        if get_user.status_code == 200:
+            return templates.TemplateResponse("userPages/index.html", {"request": req, "blogs": blogs, "user": get_user.json()})
     return templates.TemplateResponse("index.html", {"request": req, "blogs": blogs})
 
 
@@ -32,7 +36,18 @@ async def login_user(req: Request, user_name: Annotated[str, Form()], password: 
         result = {"title": "Login Failed", "body": user}
         return templates.TemplateResponse("operationResult.html", {"request": req, "result": result})
     result = {"title": "Login Successful", "body": user}
-    return templates.TemplateResponse("operationResult.html", {"request": req, "result": result})
+    response = templates.TemplateResponse("operationResult.html", {"request": req, "result": result})
+    u = user.json()
+    response.set_cookie(key="cookie_id", value=u['id'])
+    return response
+
+
+@app.get("/blog/logout")
+async def logout_user(req:Request):
+    result = {"title": "Logout Successful"}
+    response = templates.TemplateResponse("operationResult.html", {"request": req, "result": result})
+    response.delete_cookie(key="cookie_id")
+    return response
 
 
 @app.get("/blog/register-page", response_class=HTMLResponse)
@@ -48,7 +63,7 @@ async def register_user(req: Request, first_name: Annotated[str, Form()], last_n
     if x.status_code != 201:
         result = {"title": "Register Failed", "body": x}
         return templates.TemplateResponse("operationResult.html", {"request": req, "result": result})
-    result = {"title": "Successful Registration", "body": x}
+    result = {"title": "Successful Registration, You can now login", "body": x}
     return templates.TemplateResponse("operationResult.html", {"request": req, "result": result})
 
 
@@ -73,7 +88,13 @@ async def get_post_comments(req: Request, post_id: int):
 
 
 @app.get("/blog/user-page/{user_id}", response_class=HTMLResponse)
-async def get_home_page(req: Request, user_id: int):
+async def get_home_page(req: Request, user_id: int, cookie_id: int = Cookie(None)):
     user = requests.get(f'{RESTAPI_URL}/getUser/{user_id}').json()
     blogs = requests.get(f'{RESTAPI_URL}/getUserBlogs/{user_id}').json()
-    return templates.TemplateResponse("user.html", {"request": req, "user": user, "blogs": blogs})
+    current_user = requests.get(f'{RESTAPI_URL}/getUser/{cookie_id}')
+    if current_user.status_code != 200:
+        return templates.TemplateResponse("user.html", {"request": req, "user": user.json(), "blogs": blogs})
+    if user['id'] == cookie_id:
+        return templates.TemplateResponse("userPages/selfUser.html", {"request": req, "user": user, "blogs": blogs})
+    else:
+        return templates.TemplateResponse("userPages/user.html", {"request": req, "user": user, "blogs": blogs, "current_user": current_user.json()})
