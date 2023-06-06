@@ -13,6 +13,27 @@ def create_user(session, new_user: models.User):
     session.refresh(new_user)
 
 
+# def create_blog(session, new_blog_schema: schemas.BlogCreateSchema, user_id: int):
+#     user_creator_model = get_user_by_id(session, user_id)
+#
+#     if user_creator_model is None:
+#         raise HTTPException(status_code=404, detail="Blog owner does not exist")
+#
+#     new_blog_model = models.Blog(**new_blog_schema.dict(), created_at=datetime.utcnow())
+#
+#     session.add(new_blog_model)
+#     session.commit()
+#     session.refresh(new_blog_model)
+#
+#     new_user_blog_association = models.UserBlog(user_id=user_id, blog_id=new_blog_model.id)
+#
+#     session.add(new_user_blog_association)
+#     session.commit()
+#     session.refresh(new_user_blog_association)
+#
+#     return new_blog_model
+
+
 def create_blog(session, new_blog_schema: schemas.BlogCreateSchema, user_id: int):
     user_creator_model = get_user_by_id(session, user_id)
 
@@ -24,12 +45,6 @@ def create_blog(session, new_blog_schema: schemas.BlogCreateSchema, user_id: int
     session.add(new_blog_model)
     session.commit()
     session.refresh(new_blog_model)
-
-    new_user_blog_association = models.UserBlog(user_id=user_id, blog_id=new_blog_model.id)
-
-    session.add(new_user_blog_association)
-    session.commit()
-    session.refresh(new_user_blog_association)
 
     return new_blog_model
 

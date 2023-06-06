@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import MetaData, ForeignKey
-from sqlalchemy.orm import registry, Mapped, mapped_column
+from sqlalchemy.orm import registry, Mapped, mapped_column, relationship
 
 metadata = MetaData()
 mapper_registry = registry(metadata=metadata)
@@ -11,6 +11,7 @@ mapper_registry = registry(metadata=metadata)
 class User:
     __tablename__ = "app_user"
 
+    id: Mapped[int] = mapped_column("id", primary_key=True, autoincrement=True)
     first_name: Mapped[str] = mapped_column("first_name")
     last_name: Mapped[str] = mapped_column("last_name")
     profile_name: Mapped[str] = mapped_column("profile_name")
@@ -18,7 +19,11 @@ class User:
     password: Mapped[str] = mapped_column("password")
     country: Mapped[str] = mapped_column("country")
     signup_date: Mapped[datetime] = mapped_column("signup_date")
-    id: Mapped[int] = mapped_column("id", primary_key=True, autoincrement=True)
+    blogs: Mapped[list["Blog"]] = relationship(
+        "Blog",
+        secondary="user_blog",
+        back_populates="owners"
+    )
 
     def __repr__(self):
         return f"User: {self.id} {self.first_name} {self.last_name}"
@@ -44,17 +49,22 @@ class UserBlog:
     blog_id: Mapped[int] = mapped_column("blog_id", ForeignKey("blog.id"), primary_key=True)
 
     def __repr__(self):
-        return f"UserFollowing: {self.user_id} {self.blog_id}"
+        return f"UserBlog: {self.user_id} {self.blog_id}"
 
 
 @mapper_registry.mapped
 class Blog:
     __tablename__ = "blog"
 
+    id: Mapped[int] = mapped_column("id", primary_key=True, autoincrement=True)
     title: Mapped[str] = mapped_column("title")
     description: Mapped[str] = mapped_column("description")
     created_at: Mapped[datetime] = mapped_column("created_at")
-    id: Mapped[int] = mapped_column("id", primary_key=True, autoincrement=True)
+    owners: Mapped[list["User"]] = relationship(
+        "User",
+        secondary="user_blog",
+        back_populates="blogs"
+    )
 
     def __repr__(self):
         return f"Blog: {self.id} {self.title}"

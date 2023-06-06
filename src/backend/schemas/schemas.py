@@ -9,22 +9,96 @@ class OrmBaseModel(BaseModel):
         orm_mode = True
 
 
+#####
+# Base Schemas
+#####
+
 class UserBaseSchema(OrmBaseModel):
+    uuid: str
     first_name: str
     last_name: str
     profile_name: str
     email: str
     country: str
+    created_at: datetime
 
 
-class UserCreateSchema(UserBaseSchema):
+class BlogBaseSchema(OrmBaseModel):
+    uuid: str
+    title: str
+    description: str
+    created_at: datetime
+
+
+class PostBaseSchema(OrmBaseModel):
+    uuid: str
+    blog_uuid: str
+    title: str
+    body: str
+    created_at: datetime
+
+
+class CommentBaseSchema(OrmBaseModel):
+    uuid: str
+    user_uuid: str
+    post_uuid: str
+    body: str
+    created_at: datetime
+
+
+#####
+# Create Schemas
+#####
+
+class UserCreateSchema(OrmBaseModel):
+    first_name: str
+    last_name: str
+    profile_name: str
     password: str
+    email: str
+    country: str
 
+
+class BlogCreateSchema(OrmBaseModel):
+    title: str
+    description: str
+
+
+class PostCreateSchema(OrmBaseModel):
+    blog_uuid: str
+    title: str
+    body: str
+
+
+class CommentCreateSchema(OrmBaseModel):
+    user_uuid: str
+    post_uuid: str
+    body: str
+
+
+#####
+# Get Schemas
+#####
 
 class UserGetSchema(UserBaseSchema):
-    id: int
-    signup_date: datetime
+    blogs: list[BlogBaseSchema]
 
+
+class BlogGetSchema(BlogBaseSchema):
+    owners: list[UserGetSchema]
+
+
+class PostGetSchema(PostBaseSchema):
+    pass
+
+
+class CommentGetSchema(CommentBaseSchema):
+    pass
+
+
+#####
+# Update Schemas
+#####
 
 class UserUpdateSchema(OrmBaseModel):
     first_name: Optional[str]
@@ -34,9 +108,18 @@ class UserUpdateSchema(OrmBaseModel):
     country: Optional[str]
 
 
-class UserLoginSchema(OrmBaseModel):
-    profile_name: str
-    password: str
+class BlogUpdateSchema(OrmBaseModel):
+    title: Optional[str]
+    description: Optional[str]
+
+
+class PostUpdateSchema(OrmBaseModel):
+    title: Optional[str]
+    body: Optional[str]
+
+
+class CommentUpdateSchema(OrmBaseModel):
+    body: Optional[str]
 
 
 class UserFollowingSchema(OrmBaseModel):
@@ -45,126 +128,63 @@ class UserFollowingSchema(OrmBaseModel):
     followed_at: datetime
 
 
-class UserBlogSchema(OrmBaseModel):
-    user_id: int
-    blog_id: int
-
-
-class InteractionSchema(OrmBaseModel):
-    user_id: int
-    content_id: int
-    interacted_with_at: datetime
-
-
-class BlogBaseSchema(OrmBaseModel):
-    title: str
-    description: str
-
-
-class BlogCreateSchema(BlogBaseSchema):
-    pass
-
-
-class BlogGetSchema(BlogCreateSchema):
-    id: str
-    created_at: datetime
-
-
-class BlogUpdateSchema(OrmBaseModel):
-    title: Optional[str]
-    description: Optional[str]
-
-
-class PostBaseSchema(OrmBaseModel):
-    blog_id: int
-    title: str
-    body: str
-
-
-class PostCreateSchema(PostBaseSchema):
-    pass
-
-
-class PostGetSchema(PostBaseSchema):
-    id: int
-    created_at: datetime
-
-
-class PostUpdateSchema(OrmBaseModel):
-    title: Optional[str]
-    body: Optional[str]
-
-
-class CommentBaseSchema(OrmBaseModel):
-    user_id: int
-    post_id: int
-    body: str
-
-
-class CommentCreateSchema(CommentBaseSchema):
-    pass
-
-
-class CommentGetSchema(CommentBaseSchema):
-    id: int
-    created_at: datetime
-
-
-class CommentUpdateSchema(OrmBaseModel):
-    body: Optional[str]
-
-
-class LikeBaseSchema(OrmBaseModel):
-    user_id: int
-
-
-class BlogLikeCreateSchema(LikeBaseSchema):
-    blog_id: int
-
-
-class BlogLikeGetSchema(BlogLikeCreateSchema):
-    liked_at: datetime
-
-
-class PostLikeCreateSchema(LikeBaseSchema):
-    post_id: int
-
-
-class PostLikeGetSchema(PostLikeCreateSchema):
-    liked_at: datetime
-
-
-class CommentLikeCreateSchema(LikeBaseSchema):
-    comment_id: int
-
-
-class CommentLikeGetSchema(CommentLikeCreateSchema):
-    liked_at: datetime
-
-
-class SaveBaseSchema(OrmBaseModel):
-    user_id: int
-
-
-class BlogSaveCreateSchema(SaveBaseSchema):
-    blog_id: int
-
-
-class BlogSaveGetSchema(BlogSaveCreateSchema):
-    saved_at: datetime
-
-
-class PostSaveCreateSchema(SaveBaseSchema):
-    post_id: int
-
-
-class PostSaveGetSchema(PostSaveCreateSchema):
-    saved_at: datetime
-
-
-class CommentSaveCreateSchema(SaveBaseSchema):
-    comment_id: int
-
-
-class CommentSaveGetSchema(CommentSaveCreateSchema):
-    saved_at: datetime
+# class InteractionSchema(OrmBaseModel):
+#     user_id: int
+#     content_id: int
+#     interacted_with_at: datetime
+#
+#
+# class LikeBaseSchema(OrmBaseModel):
+#     user_id: int
+#
+#
+# class BlogLikeCreateSchema(LikeBaseSchema):
+#     blog_id: int
+#
+#
+# class BlogLikeGetSchema(BlogLikeCreateSchema):
+#     liked_at: datetime
+#
+#
+# class PostLikeCreateSchema(LikeBaseSchema):
+#     post_id: int
+#
+#
+# class PostLikeGetSchema(PostLikeCreateSchema):
+#     liked_at: datetime
+#
+#
+# class CommentLikeCreateSchema(LikeBaseSchema):
+#     comment_id: int
+#
+#
+# class CommentLikeGetSchema(CommentLikeCreateSchema):
+#     liked_at: datetime
+#
+#
+# class SaveBaseSchema(OrmBaseModel):
+#     user_id: int
+#
+#
+# class BlogSaveCreateSchema(SaveBaseSchema):
+#     blog_id: int
+#
+#
+# class BlogSaveGetSchema(BlogSaveCreateSchema):
+#     saved_at: datetime
+#
+#
+# class PostSaveCreateSchema(SaveBaseSchema):
+#     post_id: int
+#
+#
+# class PostSaveGetSchema(PostSaveCreateSchema):
+#     saved_at: datetime
+#
+#
+# class CommentSaveCreateSchema(SaveBaseSchema):
+#     comment_id: int
+#
+#
+# class CommentSaveGetSchema(CommentSaveCreateSchema):
+#     saved_at: datetime

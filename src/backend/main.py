@@ -10,7 +10,7 @@ from src.backend.services import crud
 
 DB_URL = "sqlite:///D:\\blog.db"
 
-engine = create_engine(DB_URL, connect_args={"check_same_thread": False})
+engine = create_engine(DB_URL, connect_args={"check_same_thread": False}, echo=True)
 connection = engine.connect()
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
