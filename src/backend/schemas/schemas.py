@@ -1,5 +1,5 @@
 import re
-import uuid
+from uuid import UUID
 from datetime import datetime
 
 from pydantic import BaseModel, Field
@@ -18,7 +18,7 @@ class OrmBaseModel(BaseModel):
 #####
 
 class UserBaseSchema(OrmBaseModel):
-    uuid: str
+    uuid: UUID
     first_name: str
     last_name: str
     profile_name: str
@@ -28,24 +28,24 @@ class UserBaseSchema(OrmBaseModel):
 
 
 class BlogBaseSchema(OrmBaseModel):
-    uuid: str
+    uuid: UUID
     title: str
     description: str
     created_at: datetime
 
 
 class PostBaseSchema(OrmBaseModel):
-    uuid: str
-    blog_uuid: str
+    uuid: UUID
+    blog_uuid: UUID
     title: str
     body: str
     created_at: datetime
 
 
 class CommentBaseSchema(OrmBaseModel):
-    uuid: str
-    user_uuid: str
-    post_uuid: str
+    uuid: UUID
+    user_uuid: UUID
+    post_uuid: UUID
     body: str
     created_at: datetime
 
@@ -82,20 +82,20 @@ class UserCreateSchema(OrmBaseModel):
 
 
 class BlogCreateSchema(OrmBaseModel):
-    title: str
-    description: str
+    title: str = Field(min_length=2, max_length=100)
+    description: str = Field(max_length=200)
 
 
 class PostCreateSchema(OrmBaseModel):
-    blog_uuid: str
-    title: str
-    body: str
+    blog_uuid: UUID
+    title: str = Field(min_length=2, max_length=100)
+    body: str = Field(max_length=4000)
 
 
 class CommentCreateSchema(OrmBaseModel):
-    user_uuid: uuid.UUID
-    post_uuid: str
-    body: str
+    user_uuid: UUID
+    post_uuid: UUID
+    body: Field(max_length=1000)
 
 
 #####
@@ -122,34 +122,43 @@ class CommentGetSchema(CommentBaseSchema):
 # Update Schemas
 #####
 
+# noinspection PyMethodParameters
 class UserUpdateSchema(OrmBaseModel):
-    first_name: Optional[str]
-    last_name: Optional[str]
-    profile_name: Optional[str]
-    email: Optional[str]
+    first_name: Optional[str] = Field(min_length=2, max_length=30)
+    last_name: Optional[str] = Field(min_length=2, max_length=30)
+    profile_name: Optional[str] = Field(min_length=4, max_length=20)
     country: Optional[str]
+
+    @validator('profile_name')
+    def profile_name_is_valid(cls, profile_name):
+        regex_profile_name = re.compile('^([a-z0-9]|[-._](?![-._])){4,20}$')
+        if regex_profile_name.match(profile_name) is None:
+            raise ValueError('Username must be between 4 and 20 characters long, '
+                             'and may not contain non-alphanumeric symbols apart '
+                             'from . and _, which may not be used consecutively.')
+        return profile_name
 
 
 class BlogUpdateSchema(OrmBaseModel):
-    title: Optional[str]
-    description: Optional[str]
+    title: Optional[str] = Field(min_length=2, max_length=100)
+    description: Optional[str] = Field(max_length=200)
 
 
 class PostUpdateSchema(OrmBaseModel):
-    title: Optional[str]
-    body: Optional[str]
+    title: Optional[str] = Field(min_length=2, max_length=100)
+    body: Optional[str] = Field(max_length=4000)
 
 
 class CommentUpdateSchema(OrmBaseModel):
-    body: Optional[str]
+    body: Optional[str] = Field(max_length=1000)
+
+#####
 
 
 class UserFollowingSchema(OrmBaseModel):
     user_id: int
     follower_id: int
     followed_at: datetime
-
-#####
 
 
 class InteractionSchema(OrmBaseModel):
