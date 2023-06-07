@@ -51,7 +51,7 @@ app = FastAPI(openapi_tags=tags_metadata)
 
 @app.post("/api/createUser", status_code=201, response_model=schemas.UserGetSchema, tags=["user"])
 def create_user(new_user: schemas.UserCreateSchema):
-    new_user_model = models.User(**new_user.dict(), signup_date=datetime.utcnow())
+    new_user_model = models.User(**new_user.dict(), created_at=datetime.utcnow())
     crud.create_user(session, new_user_model)
     return new_user_model
 
@@ -101,9 +101,9 @@ def create_comment_save(new_comment_save_schema: schemas.CommentSaveCreateSchema
     return crud.create_comment_save(session, new_comment_save_schema)
 
 
-@app.get("/api/getUser/{user_id}", response_model=schemas.UserGetSchema, tags=["user"])
-def get_user_by_id(user_id: int):
-    user = crud.get_user_by_id(session, user_id)
+@app.get("/api/getUser/{user_uuid}", response_model=schemas.UserGetSchema, tags=["user"])
+def get_user_by_uuid(user_uuid: str):
+    user = crud.get_user_by_uuid(session, user_uuid)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return user

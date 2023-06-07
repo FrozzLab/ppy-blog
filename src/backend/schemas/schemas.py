@@ -127,64 +127,65 @@ class UserFollowingSchema(OrmBaseModel):
     follower_id: int
     followed_at: datetime
 
+#####
 
-# class InteractionSchema(OrmBaseModel):
-#     user_id: int
-#     content_id: int
-#     interacted_with_at: datetime
-#
-#
-# class LikeBaseSchema(OrmBaseModel):
-#     user_id: int
-#
-#
-# class BlogLikeCreateSchema(LikeBaseSchema):
-#     blog_id: int
-#
-#
-# class BlogLikeGetSchema(BlogLikeCreateSchema):
-#     liked_at: datetime
-#
-#
-# class PostLikeCreateSchema(LikeBaseSchema):
-#     post_id: int
-#
-#
-# class PostLikeGetSchema(PostLikeCreateSchema):
-#     liked_at: datetime
-#
-#
-# class CommentLikeCreateSchema(LikeBaseSchema):
-#     comment_id: int
-#
-#
-# class CommentLikeGetSchema(CommentLikeCreateSchema):
-#     liked_at: datetime
-#
-#
-# class SaveBaseSchema(OrmBaseModel):
-#     user_id: int
-#
-#
-# class BlogSaveCreateSchema(SaveBaseSchema):
-#     blog_id: int
-#
-#
-# class BlogSaveGetSchema(BlogSaveCreateSchema):
-#     saved_at: datetime
-#
-#
-# class PostSaveCreateSchema(SaveBaseSchema):
-#     post_id: int
-#
-#
-# class PostSaveGetSchema(PostSaveCreateSchema):
-#     saved_at: datetime
-#
-#
-# class CommentSaveCreateSchema(SaveBaseSchema):
-#     comment_id: int
-#
-#
-# class CommentSaveGetSchema(CommentSaveCreateSchema):
-#     saved_at: datetime
+class InteractionSchema(OrmBaseModel):
+    user_id: int
+    content_id: int
+    interacted_with_at: datetime
+
+
+class LikeBaseSchema(OrmBaseModel):
+    user_id: int
+
+
+class BlogLikeCreateSchema(LikeBaseSchema):
+    blog_id: int
+
+
+class BlogLikeGetSchema(BlogLikeCreateSchema):
+    liked_at: datetime
+
+
+class PostLikeCreateSchema(LikeBaseSchema):
+    post_id: int
+
+
+class PostLikeGetSchema(PostLikeCreateSchema):
+    liked_at: datetime
+
+
+class CommentLikeCreateSchema(LikeBaseSchema):
+    comment_id: int
+
+
+class CommentLikeGetSchema(CommentLikeCreateSchema):
+    liked_at: datetime
+
+
+class SaveBaseSchema(OrmBaseModel):
+    user_id: int
+
+
+class BlogSaveCreateSchema(SaveBaseSchema):
+    blog_id: int
+
+
+class BlogSaveGetSchema(BlogSaveCreateSchema):
+    saved_at: datetime
+
+
+class PostSaveCreateSchema(SaveBaseSchema):
+    post_id: int
+
+
+class PostSaveGetSchema(PostSaveCreateSchema):
+    saved_at: datetime
+
+
+class CommentSaveCreateSchema(SaveBaseSchema):
+    comment_id: int
+
+
+class CommentSaveGetSchema(CommentSaveCreateSchema):
+    saved_at: datetime

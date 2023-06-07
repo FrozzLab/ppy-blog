@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 
 from fastapi import HTTPException
@@ -8,6 +9,8 @@ from src.backend.schemas import schemas
 
 
 def create_user(session, new_user: models.User):
+    new_user.uuid = uuid.uuid4().hex
+
     session.add(new_user)
     session.commit()
     session.refresh(new_user)
@@ -35,7 +38,7 @@ def create_user(session, new_user: models.User):
 
 
 def create_blog(session, new_blog_schema: schemas.BlogCreateSchema, user_id: int):
-    user_creator_model = get_user_by_id(session, user_id)
+    user_creator_model = get_user_by_uuid(session, user_id)
 
     if user_creator_model is None:
         raise HTTPException(status_code=404, detail="Blog owner does not exist")
@@ -66,7 +69,7 @@ def create_post(session, new_post_schema: schemas.PostCreateSchema):
 def create_comment(session, new_comment_schema: schemas.CommentCreateSchema):
     new_comment_model = models.Comment(**new_comment_schema.dict(), created_at=datetime.utcnow())
     parent_post_model = get_post_by_id(session, new_comment_model.post_id)
-    user_creator_model = get_user_by_id(session, new_comment_model.user_id)
+    user_creator_model = get_user_by_uuid(session, new_comment_model.user_id)
 
     if parent_post_model is None:
         raise HTTPException(status_code=404, detail="Parent post does not exist")
@@ -83,7 +86,7 @@ def create_comment(session, new_comment_schema: schemas.CommentCreateSchema):
 
 def create_blog_like(session, new_like_schema: schemas.BlogLikeCreateSchema):
     new_like_model = models.BlogLike(**new_like_schema.dict(), liked_at=datetime.utcnow())
-    user_model = get_user_by_id(session, new_like_schema.user_id)
+    user_model = get_user_by_uuid(session, new_like_schema.user_id)
     blog_model = get_blog_by_id(session, new_like_schema.blog_id)
 
     if user_model is None:
@@ -101,7 +104,7 @@ def create_blog_like(session, new_like_schema: schemas.BlogLikeCreateSchema):
 
 def create_post_like(session, new_like_schema: schemas.PostLikeCreateSchema):
     new_like_model = models.PostLike(**new_like_schema.dict(), liked_at=datetime.utcnow())
-    user_model = get_user_by_id(session, new_like_schema.user_id)
+    user_model = get_user_by_uuid(session, new_like_schema.user_id)
     post_model = get_post_by_id(session, new_like_schema.post_id)
 
     if user_model is None:
@@ -119,7 +122,7 @@ def create_post_like(session, new_like_schema: schemas.PostLikeCreateSchema):
 
 def create_comment_like(session, new_like_schema: schemas.CommentLikeCreateSchema):
     new_like_model = models.CommentLike(**new_like_schema.dict(), liked_at=datetime.utcnow())
-    user_model = get_user_by_id(session, new_like_schema.user_id)
+    user_model = get_user_by_uuid(session, new_like_schema.user_id)
     comment_model = get_comment_by_id(session, new_like_schema.comment_id)
 
     if user_model is None:
@@ -137,7 +140,7 @@ def create_comment_like(session, new_like_schema: schemas.CommentLikeCreateSchem
 
 def create_blog_save(session, new_save_schema: schemas.BlogSaveCreateSchema):
     new_save_model = models.BlogSave(**new_save_schema.dict(), saved_at=datetime.utcnow())
-    user_model = get_user_by_id(session, new_save_schema.user_id)
+    user_model = get_user_by_uuid(session, new_save_schema.user_id)
     blog_model = get_blog_by_id(session, new_save_schema.blog_id)
 
     if user_model is None:
@@ -155,7 +158,7 @@ def create_blog_save(session, new_save_schema: schemas.BlogSaveCreateSchema):
 
 def create_post_save(session, new_save_schema: schemas.PostSaveCreateSchema):
     new_save_model = models.PostSave(**new_save_schema.dict(), saved_at=datetime.utcnow())
-    user_model = get_user_by_id(session, new_save_schema.user_id)
+    user_model = get_user_by_uuid(session, new_save_schema.user_id)
     post_model = get_post_by_id(session, new_save_schema.post_id)
 
     if user_model is None:
@@ -173,7 +176,7 @@ def create_post_save(session, new_save_schema: schemas.PostSaveCreateSchema):
 
 def create_comment_save(session, new_save_schema: schemas.CommentSaveCreateSchema):
     new_save_model = models.CommentSave(**new_save_schema.dict(), saved_at=datetime.utcnow())
-    user_model = get_user_by_id(session, new_save_schema.user_id)
+    user_model = get_user_by_uuid(session, new_save_schema.user_id)
     comment_model = get_comment_by_id(session, new_save_schema.comment_id)
 
     if user_model is None:
@@ -189,8 +192,8 @@ def create_comment_save(session, new_save_schema: schemas.CommentSaveCreateSchem
     return new_save_model
 
 
-def get_user_by_id(session, user_id: int):
-    return session.query(models.User).filter(models.User.id == user_id).first()
+def get_user_by_uuid(session, user_uuid: str):
+    return session.query(models.User).filter(models.User.uuid == user_uuid).first()
 
 
 def get_user_by_name_and_password(session, user_profile_name: str, user_password: str):
@@ -280,7 +283,7 @@ def get_all_comments(session):
 
 
 def update_user_by_id(session, user_update_data: schemas.UserUpdateSchema, user_id: int):
-    given_user_model = get_user_by_id(session, user_id)
+    given_user_model = get_user_by_uuid(session, user_id)
 
     if given_user_model is None:
         raise HTTPException(status_code=404, detail="User queued for update does not exist")

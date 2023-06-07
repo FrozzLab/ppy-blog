@@ -12,17 +12,30 @@ class User:
     __tablename__ = "app_user"
 
     id: Mapped[int] = mapped_column("id", primary_key=True, autoincrement=True)
+    uuid: Mapped[str] = mapped_column("uuid")
     first_name: Mapped[str] = mapped_column("first_name")
     last_name: Mapped[str] = mapped_column("last_name")
     profile_name: Mapped[str] = mapped_column("profile_name")
     email: Mapped[str] = mapped_column("email")
     password: Mapped[str] = mapped_column("password")
     country: Mapped[str] = mapped_column("country")
-    signup_date: Mapped[datetime] = mapped_column("signup_date")
+    created_at: Mapped[datetime] = mapped_column("created_at")
     blogs: Mapped[list["Blog"]] = relationship(
         "Blog",
         secondary="user_blog",
         back_populates="owners"
+    )
+    follows: Mapped[list["UserFollowing"]] = relationship(
+        secondary="following",
+        primaryjoin="UserFollowing.follower_id==User.id",
+        secondaryjoin="UserFollowing.user_id==User.id",
+        back_populates="follower"
+    )
+    followers: Mapped[list["UserFollowing"]] = relationship(
+        secondary="following",
+        primaryjoin="UserFollowing.user_id==User.id",
+        secondaryjoin="UserFollowing.follower_id==User.id",
+        back_populates="user"
     )
 
     def __repr__(self):
@@ -34,7 +47,9 @@ class UserFollowing:
     __tablename__ = "following"
 
     user_id: Mapped[int] = mapped_column("app_user_id", ForeignKey("app_user.id"), primary_key=True)
+    user: Mapped["User"] = relationship(back_populates="follows", foreign_keys=[user_id])
     follower_id: Mapped[int] = mapped_column("follower_id", ForeignKey("app_user.id"), primary_key=True)
+    follower: Mapped["User"] = relationship(back_populates="followers", foreign_keys=[follower_id])
     followed_at: Mapped[datetime] = mapped_column("followed_at")
 
     def __repr__(self):
