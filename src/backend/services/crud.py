@@ -244,18 +244,26 @@ def get_user_comments(session, user_id: int):
     return session.query(models.Comment).filter(models.Comment.user_id == user_id).all()
 
 
-def get_user_followers(session, user_id: int):
-    return session.query(models.User). \
-        join(models.UserFollowing, models.UserFollowing.follower_id == models.User.id). \
-        filter(models.UserFollowing.user_id == user_id). \
-        all()
+def get_user_followers(session, user_uuid: str):
+    user = session.query(models.User).filter(models.User.uuid == user_uuid).first()
+    follower_associations = user.followers if user else []
+    followers = []
+
+    for follower_association in follower_associations:
+        followers.append(follower_association.follower)
+
+    return followers
 
 
-def get_user_follows(session, user_id: int):
-    return session.query(models.User). \
-        join(models.UserFollowing, models.UserFollowing.user_id == models.User.id). \
-        filter(models.UserFollowing.follower_id == user_id). \
-        all()
+def get_user_follows(session, user_uuid: str):
+    user = session.query(models.User).filter(models.User.uuid == user_uuid).first()
+    follow_associations = user.follows if user else []
+    follows = []
+
+    for follow_association in follow_associations:
+        follows.append(follow_association.user)
+
+    return follows
 
 
 def get_all_users(session):
@@ -282,8 +290,8 @@ def get_all_comments(session):
     return session.query(models.Comment).all()
 
 
-def update_user_by_id(session, user_update_data: schemas.UserUpdateSchema, user_id: int):
-    given_user_model = get_user_by_uuid(session, user_id)
+def update_user_by_uuid(session, user_update_data: schemas.UserUpdateSchema, user_uuid: str):
+    given_user_model = get_user_by_uuid(session, user_uuid)
 
     if given_user_model is None:
         raise HTTPException(status_code=404, detail="User queued for update does not exist")

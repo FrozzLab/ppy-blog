@@ -8,6 +8,7 @@ from src.backend.models import models
 from src.backend.schemas import schemas
 from src.backend.services import crud
 
+
 DB_URL = "sqlite:///D:\\blog.db"
 
 engine = create_engine(DB_URL, connect_args={"check_same_thread": False}, echo=True)
@@ -190,17 +191,17 @@ def get_user_comments(user_id: int):
     return user_comments
 
 
-@app.get("/api/getUserFollowers/{user_id}", response_model=list[schemas.UserGetSchema], tags=["user"])
-def get_user_followers(user_id: int):
-    user_followers = crud.get_user_followers(session, user_id)
+@app.get("/api/getUserFollowers/{user_uuid}", response_model=list[schemas.UserGetSchema], tags=["user"])
+def get_user_followers(user_uuid: str):
+    user_followers = crud.get_user_followers(session, user_uuid)
     if not user_followers:
         raise HTTPException(status_code=404, detail="The user does not exist or has no followers")
     return user_followers
 
 
-@app.get("/api/getUserFollows/{user_id}", response_model=list[schemas.UserGetSchema], tags=["user"])
-def get_user_follows(user_id: int):
-    user_follows = crud.get_user_follows(session, user_id)
+@app.get("/api/getUserFollows/{user_uuid}", response_model=list[schemas.UserGetSchema], tags=["user"])
+def get_user_follows(user_uuid: str):
+    user_follows = crud.get_user_follows(session, user_uuid)
     if not user_follows:
         raise HTTPException(status_code=404, detail="The user does not exist or does not follow anyone")
     return user_follows
@@ -248,7 +249,7 @@ def get_all_comments():
 
 @app.put("/api/updateUser/{user_id}", response_model=schemas.UserGetSchema, tags=["user"])
 def update_user_by_id(user_update_data: schemas.UserUpdateSchema, user_id: int):
-    return crud.update_user_by_id(session, user_update_data, user_id)
+    return crud.update_user_by_uuid(session, user_update_data, user_id)
 
 
 @app.put("/api/updateBlog/{blog_id}", response_model=schemas.BlogGetSchema, tags=["blog"])

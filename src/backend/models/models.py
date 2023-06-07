@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import MetaData, ForeignKey
-from sqlalchemy.orm import registry, Mapped, mapped_column, relationship
+from sqlalchemy.orm import registry, Mapped, mapped_column, relationship, declarative_base, validates
 
 metadata = MetaData()
 mapper_registry = registry(metadata=metadata)

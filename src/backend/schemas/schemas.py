@@ -1,6 +1,10 @@
+import re
+import uuid
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from pydantic.class_validators import validator
+from pydantic.networks import EmailStr
 from pydantic.schema import Optional
 
 
@@ -50,13 +54,31 @@ class CommentBaseSchema(OrmBaseModel):
 # Create Schemas
 #####
 
+# noinspection PyMethodParameters
 class UserCreateSchema(OrmBaseModel):
-    first_name: str
-    last_name: str
-    profile_name: str
+    first_name: str = Field(min_length=2, max_length=30)
+    last_name: str = Field(min_length=2, max_length=30)
+    profile_name: str = Field(min_length=4, max_length=20)
     password: str
-    email: str
+    email: EmailStr
     country: str
+
+    @validator('password')
+    def password_is_valid(cls, password):
+        regex_pass = re.compile('^(?=\S{8,20}$)(?=.*?\d)(?=.*?[a-z])(?=.*?[A-Z])(?=.*?[^A-Za-z\s0-9])')
+        if regex_pass.match(password) is None:
+            raise ValueError('Password must be between 8 and 20 characters long, '
+                             'and must contain a number and a special character.')
+        return password
+
+    @validator('profile_name')
+    def profile_name_is_valid(cls, profile_name):
+        regex_profile_name = re.compile('^([a-z0-9]|[-._](?![-._])){4,20}$')
+        if regex_profile_name.match(profile_name) is None:
+            raise ValueError('Username must be between 4 and 20 characters long, '
+                             'and may not contain non-alphanumeric symbols apart '
+                             'from . and _, which may not be used consecutively.')
+        return profile_name
 
 
 class BlogCreateSchema(OrmBaseModel):
@@ -71,7 +93,7 @@ class PostCreateSchema(OrmBaseModel):
 
 
 class CommentCreateSchema(OrmBaseModel):
-    user_uuid: str
+    user_uuid: uuid.UUID
     post_uuid: str
     body: str
 
@@ -128,6 +150,7 @@ class UserFollowingSchema(OrmBaseModel):
     followed_at: datetime
 
 #####
+
 
 class InteractionSchema(OrmBaseModel):
     user_id: int
