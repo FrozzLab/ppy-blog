@@ -246,7 +246,7 @@ def get_user_comments(session, user_id: int):
 
 def get_user_followers(session, user_uuid: str):
     user = session.query(models.User).filter(models.User.uuid == user_uuid).first()
-    follower_associations = user.followers if user else []
+    follower_associations = user.follower_associations if user else []
     followers = []
 
     for follower_association in follower_associations:
@@ -257,7 +257,7 @@ def get_user_followers(session, user_uuid: str):
 
 def get_user_follows(session, user_uuid: str):
     user = session.query(models.User).filter(models.User.uuid == user_uuid).first()
-    follow_associations = user.follows if user else []
+    follow_associations = user.follow_associations if user else []
     follows = []
 
     for follow_association in follow_associations:

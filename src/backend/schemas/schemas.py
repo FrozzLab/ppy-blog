@@ -36,6 +36,7 @@ class BlogBaseSchema(OrmBaseModel):
 
 class PostBaseSchema(OrmBaseModel):
     uuid: UUID
+    user_uuid: UUID
     blog_uuid: UUID
     title: str
     body: str
@@ -50,9 +51,17 @@ class CommentBaseSchema(OrmBaseModel):
     created_at: datetime
 
 
+class LikeBaseSchema(OrmBaseModel):
+    user_uuid: UUID
+
+
+class SaveBaseSchema(OrmBaseModel):
+    user_uuid: UUID
+
 #####
 # Create Schemas
 #####
+
 
 # noinspection PyMethodParameters
 class UserCreateSchema(OrmBaseModel):
@@ -95,12 +104,36 @@ class PostCreateSchema(OrmBaseModel):
 class CommentCreateSchema(OrmBaseModel):
     user_uuid: UUID
     post_uuid: UUID
-    body: Field(max_length=1000)
+    body: str = Field(max_length=1000)
 
+
+class BlogLikeCreateSchema(LikeBaseSchema):
+    blog_uuid: UUID
+
+
+class PostLikeCreateSchema(LikeBaseSchema):
+    post_uuid: UUID
+
+
+class BlogSaveCreateSchema(SaveBaseSchema):
+    blog_uuid: UUID
+
+
+class PostSaveCreateSchema(SaveBaseSchema):
+    post_uuid: UUID
+
+
+class CommentLikeCreateSchema(LikeBaseSchema):
+    comment_uuid: UUID
+
+
+class CommentSaveCreateSchema(SaveBaseSchema):
+    comment_uuid: UUID
 
 #####
 # Get Schemas
 #####
+
 
 class UserGetSchema(UserBaseSchema):
     blogs: list[BlogBaseSchema]
@@ -118,9 +151,33 @@ class CommentGetSchema(CommentBaseSchema):
     pass
 
 
+class BlogLikeGetSchema(BlogLikeCreateSchema):
+    liked_at: datetime
+
+
+class PostLikeGetSchema(PostLikeCreateSchema):
+    liked_at: datetime
+
+
+class BlogSaveGetSchema(BlogSaveCreateSchema):
+    saved_at: datetime
+
+
+class PostSaveGetSchema(PostSaveCreateSchema):
+    saved_at: datetime
+
+
+class CommentLikeGetSchema(CommentLikeCreateSchema):
+    liked_at: datetime
+
+
+class CommentSaveGetSchema(CommentSaveCreateSchema):
+    saved_at: datetime
+
 #####
 # Update Schemas
 #####
+
 
 # noinspection PyMethodParameters
 class UserUpdateSchema(OrmBaseModel):
@@ -151,73 +208,3 @@ class PostUpdateSchema(OrmBaseModel):
 
 class CommentUpdateSchema(OrmBaseModel):
     body: Optional[str] = Field(max_length=1000)
-
-#####
-
-
-class UserFollowingSchema(OrmBaseModel):
-    user_id: int
-    follower_id: int
-    followed_at: datetime
-
-
-class InteractionSchema(OrmBaseModel):
-    user_id: int
-    content_id: int
-    interacted_with_at: datetime
-
-
-class LikeBaseSchema(OrmBaseModel):
-    user_id: int
-
-
-class BlogLikeCreateSchema(LikeBaseSchema):
-    blog_id: int
-
-
-class BlogLikeGetSchema(BlogLikeCreateSchema):
-    liked_at: datetime
-
-
-class PostLikeCreateSchema(LikeBaseSchema):
-    post_id: int
-
-
-class PostLikeGetSchema(PostLikeCreateSchema):
-    liked_at: datetime
-
-
-class CommentLikeCreateSchema(LikeBaseSchema):
-    comment_id: int
-
-
-class CommentLikeGetSchema(CommentLikeCreateSchema):
-    liked_at: datetime
-
-
-class SaveBaseSchema(OrmBaseModel):
-    user_id: int
-
-
-class BlogSaveCreateSchema(SaveBaseSchema):
-    blog_id: int
-
-
-class BlogSaveGetSchema(BlogSaveCreateSchema):
-    saved_at: datetime
-
-
-class PostSaveCreateSchema(SaveBaseSchema):
-    post_id: int
-
-
-class PostSaveGetSchema(PostSaveCreateSchema):
-    saved_at: datetime
-
-
-class CommentSaveCreateSchema(SaveBaseSchema):
-    comment_id: int
-
-
-class CommentSaveGetSchema(CommentSaveCreateSchema):
-    saved_at: datetime

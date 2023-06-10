@@ -248,8 +248,8 @@ def get_all_comments():
 
 
 @app.put("/api/updateUser/{user_id}", response_model=schemas.UserGetSchema, tags=["user"])
-def update_user_by_id(user_update_data: schemas.UserUpdateSchema, user_id: int):
-    return crud.update_user_by_uuid(session, user_update_data, user_id)
+def update_user_by_uuid(user_update_data: schemas.UserUpdateSchema, user_uuid: str):
+    return crud.update_user_by_uuid(session, user_update_data, user_uuid)
 
 
 @app.put("/api/updateBlog/{blog_id}", response_model=schemas.BlogGetSchema, tags=["blog"])
