@@ -1,4 +1,4 @@
-import uuid
+from uuid import uuid4, UUID
 from datetime import datetime
 
 from fastapi import HTTPException
@@ -8,42 +8,36 @@ from src.backend.models import models
 from src.backend.schemas import schemas
 
 
-def create_user(session, new_user: models.User):
-    new_user.uuid = uuid.uuid4().hex
+def create_user(session, new_user_schema: schemas.UserCreateSchema):
+    existing_user_model = get_user_by_username(session, new_user_schema.profile_name)
 
-    session.add(new_user)
+    if existing_user_model is not None:
+        raise HTTPException(status_code=400, detail="User with given profile name already exists")
+
+    new_user_model = models.User(**new_user_schema.dict(), created_at=datetime.utcnow())
+    new_user_model.uuid = uuid4()
+
+    session.add(new_user_model)
     session.commit()
-    session.refresh(new_user)
+    session.refresh(new_user_model)
+
+    return new_user_model
 
 
-# def create_blog(session, new_blog_schema: schemas.BlogCreateSchema, user_id: int):
-#     user_creator_model = get_user_by_id(session, user_id)
-#
-#     if user_creator_model is None:
-#         raise HTTPException(status_code=404, detail="Blog owner does not exist")
-#
-#     new_blog_model = models.Blog(**new_blog_schema.dict(), created_at=datetime.utcnow())
-#
-#     session.add(new_blog_model)
-#     session.commit()
-#     session.refresh(new_blog_model)
-#
-#     new_user_blog_association = models.UserBlog(user_id=user_id, blog_id=new_blog_model.id)
-#
-#     session.add(new_user_blog_association)
-#     session.commit()
-#     session.refresh(new_user_blog_association)
-#
-#     return new_blog_model
-
-
-def create_blog(session, new_blog_schema: schemas.BlogCreateSchema, user_id: int):
-    user_creator_model = get_user_by_uuid(session, user_id)
+def create_blog(session, new_blog_schema: schemas.BlogCreateSchema):
+    user_creator_model = get_user_by_id(session, new_blog_schema.user_id)
 
     if user_creator_model is None:
-        raise HTTPException(status_code=404, detail="Blog owner does not exist")
+        raise HTTPException(status_code=404, detail="Blog creator does not exist")
+
+    existing_blog_model = get_blog_by_title(session, new_blog_schema.title)
+
+    if existing_blog_model is not None:
+        raise HTTPException(status_code=400, detail="Blog with given title already exists")
 
     new_blog_model = models.Blog(**new_blog_schema.dict(), created_at=datetime.utcnow())
+    new_blog_model.uuid = uuid4()
+    new_blog_model.owners.append(user_creator_model)
 
     session.add(new_blog_model)
     session.commit()
@@ -53,11 +47,25 @@ def create_blog(session, new_blog_schema: schemas.BlogCreateSchema, user_id: int
 
 
 def create_post(session, new_post_schema: schemas.PostCreateSchema):
-    new_post_model = models.Post(**new_post_schema.dict(), created_at=datetime.utcnow())
-    parent_blog_model = get_blog_by_id(session, new_post_model.blog_id)
+    parent_blog_model = get_blog_by_id(session, new_post_schema.blog_id)
 
     if parent_blog_model is None:
         raise HTTPException(status_code=404, detail="Parent blog does not exist")
+
+    user_creator_model = get_user_by_id(session, new_post_schema.user_id)
+
+    if user_creator_model is None:
+        raise HTTPException(status_code=404, detail="Post creator does not exist")
+
+    existing_post_model = get_post_by_title(session, new_post_schema.title, new_post_schema.blog_id)
+
+    if existing_post_model is not None:
+        raise HTTPException(status_code=400, detail="Post with given title already exists in given blog")
+
+    new_post_model = models.Post(**new_post_schema.dict(), created_at=datetime.utcnow())
+    new_post_model.uuid = uuid4()
+    new_post_model.user = user_creator_model
+    new_post_model.blog = parent_blog_model
 
     session.add(new_post_model)
     session.commit()
@@ -67,15 +75,17 @@ def create_post(session, new_post_schema: schemas.PostCreateSchema):
 
 
 def create_comment(session, new_comment_schema: schemas.CommentCreateSchema):
-    new_comment_model = models.Comment(**new_comment_schema.dict(), created_at=datetime.utcnow())
-    parent_post_model = get_post_by_id(session, new_comment_model.post_id)
-    user_creator_model = get_user_by_uuid(session, new_comment_model.user_id)
+    parent_post_model = get_post_by_uuid(session, new_comment_schema.post_uuid)
 
     if parent_post_model is None:
         raise HTTPException(status_code=404, detail="Parent post does not exist")
 
+    user_creator_model = get_user_by_uuid(session, new_comment_schema.user_uuid)
+
     if user_creator_model is None:
         raise HTTPException(status_code=404, detail="Comment creator does not exist")
+
+    new_comment_model = models.Comment(**new_comment_schema.dict(), created_at=datetime.utcnow())
 
     session.add(new_comment_model)
     session.commit()
@@ -87,7 +97,7 @@ def create_comment(session, new_comment_schema: schemas.CommentCreateSchema):
 def create_blog_like(session, new_like_schema: schemas.BlogLikeCreateSchema):
     new_like_model = models.BlogLike(**new_like_schema.dict(), liked_at=datetime.utcnow())
     user_model = get_user_by_uuid(session, new_like_schema.user_id)
-    blog_model = get_blog_by_id(session, new_like_schema.blog_id)
+    blog_model = get_blog_by_uuid(session, new_like_schema.blog_id)
 
     if user_model is None:
         raise HTTPException(status_code=404, detail="Liking user does not exist")
@@ -105,7 +115,7 @@ def create_blog_like(session, new_like_schema: schemas.BlogLikeCreateSchema):
 def create_post_like(session, new_like_schema: schemas.PostLikeCreateSchema):
     new_like_model = models.PostLike(**new_like_schema.dict(), liked_at=datetime.utcnow())
     user_model = get_user_by_uuid(session, new_like_schema.user_id)
-    post_model = get_post_by_id(session, new_like_schema.post_id)
+    post_model = get_post_by_uuid(session, new_like_schema.post_id)
 
     if user_model is None:
         raise HTTPException(status_code=404, detail="Liking user does not exist")
@@ -141,7 +151,7 @@ def create_comment_like(session, new_like_schema: schemas.CommentLikeCreateSchem
 def create_blog_save(session, new_save_schema: schemas.BlogSaveCreateSchema):
     new_save_model = models.BlogSave(**new_save_schema.dict(), saved_at=datetime.utcnow())
     user_model = get_user_by_uuid(session, new_save_schema.user_id)
-    blog_model = get_blog_by_id(session, new_save_schema.blog_id)
+    blog_model = get_blog_by_uuid(session, new_save_schema.blog_id)
 
     if user_model is None:
         raise HTTPException(status_code=404, detail="Saving user does not exist")
@@ -159,7 +169,7 @@ def create_blog_save(session, new_save_schema: schemas.BlogSaveCreateSchema):
 def create_post_save(session, new_save_schema: schemas.PostSaveCreateSchema):
     new_save_model = models.PostSave(**new_save_schema.dict(), saved_at=datetime.utcnow())
     user_model = get_user_by_uuid(session, new_save_schema.user_id)
-    post_model = get_post_by_id(session, new_save_schema.post_id)
+    post_model = get_post_by_uuid(session, new_save_schema.post_id)
 
     if user_model is None:
         raise HTTPException(status_code=404, detail="Saving user does not exist")
@@ -192,8 +202,16 @@ def create_comment_save(session, new_save_schema: schemas.CommentSaveCreateSchem
     return new_save_model
 
 
-def get_user_by_uuid(session, user_uuid: str):
+def get_user_by_id(session, user_id: int):
+    return session.query(models.User).filter(models.User.id == user_id).first()
+
+
+def get_user_by_uuid(session, user_uuid: UUID):
     return session.query(models.User).filter(models.User.uuid == user_uuid).first()
+
+
+def get_user_by_username(session, user_profile_name: str):
+    return session.query(models.User).filter(models.User.profile_name == user_profile_name).first()
 
 
 def get_user_by_name_and_password(session, user_profile_name: str, user_password: str):
@@ -213,12 +231,27 @@ def get_blog_by_id(session, blog_id: int):
     return session.query(models.Blog).filter(models.Blog.id == blog_id).first()
 
 
+def get_blog_by_uuid(session, blog_uuid: UUID):
+    return session.query(models.Blog).filter(models.Blog.uuid == blog_uuid).first()
+
+
 def get_blog_by_title(session, blog_title: str):
     return session.query(models.Blog).filter(models.Blog.title == blog_title).first()
 
 
 def get_post_by_id(session, post_id: int):
     return session.query(models.Post).filter(models.Post.id == post_id).first()
+
+
+def get_post_by_uuid(session, post_uuid: UUID):
+    return session.query(models.Post).filter(models.Post.uuid == post_uuid).first()
+
+
+# Requires a relevant blog ID to be passed as the website allows for
+# posts with the same name to appear across multiple blogs
+def get_post_by_title(session, post_title: str, blog_id: int):
+    return session.query(models.Post).filter(models.Post.title == post_title
+                                             and models.Post.blog.id == blog_id).first()
 
 
 def get_comment_by_id(session, comment_id: int):
@@ -307,7 +340,7 @@ def update_user_by_uuid(session, user_update_data: schemas.UserUpdateSchema, use
 
 
 def update_blog_by_id(session, blog_update_data: schemas.BlogUpdateSchema, blog_id: int):
-    given_blog_model = get_blog_by_id(session, blog_id)
+    given_blog_model = get_blog_by_uuid(session, blog_id)
 
     if given_blog_model is None:
         raise HTTPException(status_code=404, detail="Blog queued for update does not exist")
@@ -323,7 +356,7 @@ def update_blog_by_id(session, blog_update_data: schemas.BlogUpdateSchema, blog_
 
 
 def update_post_by_id(session, post_update_data: schemas.PostUpdateSchema, post_id: int):
-    given_post_model = get_post_by_id(session, post_id)
+    given_post_model = get_post_by_uuid(session, post_id)
 
     if given_post_model is None:
         raise HTTPException(status_code=404, detail="Post queued for update does not exist")

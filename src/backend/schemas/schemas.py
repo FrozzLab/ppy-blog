@@ -18,6 +18,7 @@ class OrmBaseModel(BaseModel):
 #####
 
 class UserBaseSchema(OrmBaseModel):
+    id: int
     uuid: UUID
     first_name: str
     last_name: str
@@ -28,6 +29,7 @@ class UserBaseSchema(OrmBaseModel):
 
 
 class BlogBaseSchema(OrmBaseModel):
+    id: int
     uuid: UUID
     title: str
     description: str
@@ -35,18 +37,20 @@ class BlogBaseSchema(OrmBaseModel):
 
 
 class PostBaseSchema(OrmBaseModel):
+    id: int
     uuid: UUID
-    user_uuid: UUID
-    blog_uuid: UUID
+    user_id: int
+    blog_id: int
     title: str
     body: str
     created_at: datetime
 
 
 class CommentBaseSchema(OrmBaseModel):
+    id: int
     uuid: UUID
-    user_uuid: UUID
-    post_uuid: UUID
+    user_id: int
+    post_id: int
     body: str
     created_at: datetime
 
@@ -91,12 +95,14 @@ class UserCreateSchema(OrmBaseModel):
 
 
 class BlogCreateSchema(OrmBaseModel):
+    user_id: int
     title: str = Field(min_length=2, max_length=100)
     description: str = Field(max_length=200)
 
 
 class PostCreateSchema(OrmBaseModel):
-    blog_uuid: UUID
+    user_id: int
+    blog_id: int
     title: str = Field(min_length=2, max_length=100)
     body: str = Field(max_length=4000)
 
@@ -140,7 +146,8 @@ class UserGetSchema(UserBaseSchema):
 
 
 class BlogGetSchema(BlogBaseSchema):
-    owners: list[UserGetSchema]
+    owners: list[UserBaseSchema]
+    posts: list[PostBaseSchema]
 
 
 class PostGetSchema(PostBaseSchema):

@@ -25,13 +25,16 @@ class User:
         secondary="user_blog",
         back_populates="owners"
     )
+    posts: Mapped[list["Post"]] = relationship(back_populates="user")
     comments: Mapped[list["Comment"]] = relationship(back_populates="user")
     follow_associations: Mapped[list["UserFollowing"]] = relationship(
+        secondary="following",
         primaryjoin="UserFollowing.follower_id==User.id",
         secondaryjoin="UserFollowing.user_id==User.id",
         back_populates="follower"
     )
     follower_associations: Mapped[list["UserFollowing"]] = relationship(
+        secondary="following",
         primaryjoin="UserFollowing.user_id==User.id",
         secondaryjoin="UserFollowing.follower_id==User.id",
         back_populates="user"
@@ -198,7 +201,7 @@ class CommentLike:
     user_id: Mapped[int] = mapped_column("app_user_id", ForeignKey("app_user.id"), primary_key=True)
     user: Mapped["User"] = relationship(back_populates="comment_like_associations")
     comment_id: Mapped[int] = mapped_column("comment_id", ForeignKey("comment.id"), primary_key=True)
-    comment: Mapped["User"] = relationship(back_populates="comment_like_associations")
+    comment: Mapped["Comment"] = relationship(back_populates="comment_like_associations")
     liked_at: Mapped[datetime] = mapped_column("liked_at")
 
     def __repr__(self):
@@ -212,7 +215,7 @@ class CommentSave:
     user_id: Mapped[int] = mapped_column("app_user_id", ForeignKey("app_user.id"), primary_key=True)
     user: Mapped["User"] = relationship(back_populates="comment_save_associations")
     comment_id: Mapped[int] = mapped_column("comment_id", ForeignKey("comment.id"), primary_key=True)
-    comment: Mapped["User"] = relationship(back_populates="comment_save_associations")
+    comment: Mapped["Comment"] = relationship(back_populates="comment_save_associations")
     saved_at: Mapped[datetime] = mapped_column("saved_at")
 
     def __repr__(self):

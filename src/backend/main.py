@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 
 from fastapi import FastAPI, HTTPException
 from sqlalchemy import create_engine
@@ -58,8 +59,8 @@ def create_user(new_user: schemas.UserCreateSchema):
 
 
 @app.post("/api/createBlog", status_code=201, response_model=schemas.BlogGetSchema, tags=["blog"])
-def create_blog(new_blog: schemas.BlogCreateSchema, user_id: int):
-    return crud.create_blog(session, new_blog, user_id)
+def create_blog(new_blog: schemas.BlogCreateSchema, user_uuid: UUID):
+    return crud.create_blog(session, new_blog, user_uuid)
 
 
 @app.post("/api/createPost", status_code=201, response_model=schemas.PostGetSchema, tags=["post"])
@@ -145,7 +146,7 @@ def get_blog_by_title(blog_title: str):
 
 @app.get("/api/getPost/{post_id}", response_model=schemas.PostGetSchema, tags=["post"])
 def get_post_by_id(post_id: int):
-    post = crud.get_post_by_id(session, post_id)
+    post = crud.get_post_by_uuid(session, post_id)
     if post is None:
         raise HTTPException(status_code=404, detail="Post not found")
     return post
