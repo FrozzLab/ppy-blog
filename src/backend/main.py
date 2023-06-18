@@ -51,54 +51,52 @@ tags_metadata = [
 app = FastAPI(openapi_tags=tags_metadata)
 
 
-@app.post("/api/createUser", status_code=201, response_model=schemas.UserGetSchema, tags=["user"])
-def create_user(new_user: schemas.UserCreateSchema):
-    new_user_model = models.User(**new_user.dict(), created_at=datetime.utcnow())
-    crud.create_user(session, new_user_model)
-    return new_user_model
+@app.post("/api/createUser", status_code=200, response_model=schemas.UserGetSchema, tags=["user"])
+def create_user(new_user_schema: schemas.UserCreateSchema):
+    return crud.create_user(session, new_user_schema)
 
 
-@app.post("/api/createBlog", status_code=201, response_model=schemas.BlogGetSchema, tags=["blog"])
-def create_blog(new_blog: schemas.BlogCreateSchema, user_uuid: UUID):
-    return crud.create_blog(session, new_blog, user_uuid)
+@app.post("/api/createBlog", status_code=200, response_model=schemas.BlogGetSchema, tags=["blog"])
+def create_blog(new_blog_schema: schemas.BlogCreateSchema):
+    return crud.create_blog(session, new_blog_schema)
 
 
-@app.post("/api/createPost", status_code=201, response_model=schemas.PostGetSchema, tags=["post"])
-def create_post(new_post: schemas.PostCreateSchema):
-    return crud.create_post(session, new_post)
+@app.post("/api/createPost", status_code=200, response_model=schemas.PostGetSchema, tags=["post"])
+def create_post(new_post_schema: schemas.PostCreateSchema):
+    return crud.create_post(session, new_post_schema)
 
 
-@app.post("/api/createComment", status_code=201, response_model=schemas.CommentGetSchema, tags=["comment"])
+@app.post("/api/createComment", status_code=200, response_model=schemas.CommentGetSchema, tags=["comment"])
 def create_comment(new_comment_schema: schemas.CommentCreateSchema):
     return crud.create_comment(session, new_comment_schema)
 
 
-@app.post("/api/createBlogLike", status_code=201, response_model=schemas.BlogLikeGetSchema, tags=["like"])
+@app.post("/api/createBlogLike", status_code=200, response_model=schemas.BlogLikeGetSchema, tags=["like"])
 def create_blog_like(new_blog_like_schema: schemas.BlogLikeCreateSchema):
     return crud.create_blog_like(session, new_blog_like_schema)
 
 
-@app.post("/api/createPostLike", status_code=201, response_model=schemas.PostLikeGetSchema, tags=["like"])
+@app.post("/api/createPostLike", status_code=200, response_model=schemas.PostLikeGetSchema, tags=["like"])
 def create_post_like(new_post_like_schema: schemas.PostLikeCreateSchema):
     return crud.create_post_like(session, new_post_like_schema)
 
 
-@app.post("/api/createCommentLike", status_code=201, response_model=schemas.CommentLikeGetSchema, tags=["like"])
+@app.post("/api/createCommentLike", status_code=200, response_model=schemas.CommentLikeGetSchema, tags=["like"])
 def create_comment_like(new_comment_like_schema: schemas.CommentLikeCreateSchema):
     return crud.create_comment_like(session, new_comment_like_schema)
 
 
-@app.post("/api/createBlogSave", status_code=201, response_model=schemas.BlogSaveGetSchema, tags=["save"])
+@app.post("/api/createBlogSave", status_code=200, response_model=schemas.BlogSaveGetSchema, tags=["save"])
 def create_blog_save(new_blog_save_schema: schemas.BlogSaveCreateSchema):
     return crud.create_blog_save(session, new_blog_save_schema)
 
 
-@app.post("/api/createPostSave", status_code=201, response_model=schemas.PostSaveGetSchema, tags=["save"])
+@app.post("/api/createPostSave", status_code=200, response_model=schemas.PostSaveGetSchema, tags=["save"])
 def create_post_save(new_post_save_schema: schemas.PostSaveCreateSchema):
     return crud.create_post_save(session, new_post_save_schema)
 
 
-@app.post("/api/createCommentSave", status_code=201, response_model=schemas.CommentSaveGetSchema, tags=["save"])
+@app.post("/api/createCommentSave", status_code=200, response_model=schemas.CommentSaveGetSchema, tags=["save"])
 def create_comment_save(new_comment_save_schema: schemas.CommentSaveCreateSchema):
     return crud.create_comment_save(session, new_comment_save_schema)
 
@@ -114,7 +112,7 @@ def get_user_by_uuid(user_uuid: str):
 # Bad solution since the password is shown in plaintext in uri, will fix later
 @app.get("/api/getUserByLogin", response_model=schemas.UserGetSchema, tags=["user"])
 def get_user_by_name_and_password(user_profile_name: str, user_password: str):
-    user = crud.get_user_by_name_and_password(session, user_profile_name, user_password)
+    user = crud.get_user_by_username_and_password(session, user_profile_name, user_password)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return user

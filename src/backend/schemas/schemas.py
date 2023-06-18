@@ -56,11 +56,11 @@ class CommentBaseSchema(OrmBaseModel):
 
 
 class LikeBaseSchema(OrmBaseModel):
-    user_uuid: UUID
+    user_id: int
 
 
 class SaveBaseSchema(OrmBaseModel):
-    user_uuid: UUID
+    user_id: int
 
 #####
 # Create Schemas
@@ -86,7 +86,7 @@ class UserCreateSchema(OrmBaseModel):
 
     @validator('profile_name')
     def profile_name_is_valid(cls, profile_name):
-        regex_profile_name = re.compile('^([a-z0-9]|[-._](?![-._])){4,20}$')
+        regex_profile_name = re.compile('^([a-zA-Z0-9]|[-._](?![-._])){4,20}$')
         if regex_profile_name.match(profile_name) is None:
             raise ValueError('Username must be between 4 and 20 characters long, '
                              'and may not contain non-alphanumeric symbols apart '
@@ -97,44 +97,44 @@ class UserCreateSchema(OrmBaseModel):
 class BlogCreateSchema(OrmBaseModel):
     user_id: int
     title: str = Field(min_length=2, max_length=100)
-    description: str = Field(max_length=200)
+    description: str = Field(min_length=1, max_length=200)
 
 
 class PostCreateSchema(OrmBaseModel):
     user_id: int
     blog_id: int
     title: str = Field(min_length=2, max_length=100)
-    body: str = Field(max_length=4000)
+    body: str = Field(min_length=1, max_length=4000)
 
 
 class CommentCreateSchema(OrmBaseModel):
-    user_uuid: UUID
-    post_uuid: UUID
-    body: str = Field(max_length=1000)
+    user_id: int
+    post_id: int
+    body: str = Field(min_length=1, max_length=1000)
 
 
 class BlogLikeCreateSchema(LikeBaseSchema):
-    blog_uuid: UUID
+    blog_id: int
 
 
 class PostLikeCreateSchema(LikeBaseSchema):
-    post_uuid: UUID
+    post_id: int
 
 
 class BlogSaveCreateSchema(SaveBaseSchema):
-    blog_uuid: UUID
+    blog_id: int
 
 
 class PostSaveCreateSchema(SaveBaseSchema):
-    post_uuid: UUID
+    post_id: int
 
 
 class CommentLikeCreateSchema(LikeBaseSchema):
-    comment_uuid: UUID
+    comment_id: int
 
 
 class CommentSaveCreateSchema(SaveBaseSchema):
-    comment_uuid: UUID
+    comment_id: int
 
 #####
 # Get Schemas
@@ -205,13 +205,13 @@ class UserUpdateSchema(OrmBaseModel):
 
 class BlogUpdateSchema(OrmBaseModel):
     title: Optional[str] = Field(min_length=2, max_length=100)
-    description: Optional[str] = Field(max_length=200)
+    description: Optional[str] = Field(min_length=1, max_length=200)
 
 
 class PostUpdateSchema(OrmBaseModel):
     title: Optional[str] = Field(min_length=2, max_length=100)
-    body: Optional[str] = Field(max_length=4000)
+    body: Optional[str] = Field(min_length=1, max_length=4000)
 
 
 class CommentUpdateSchema(OrmBaseModel):
-    body: Optional[str] = Field(max_length=1000)
+    body: Optional[str] = Field(min_length=1, max_length=1000)

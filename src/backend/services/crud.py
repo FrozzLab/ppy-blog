@@ -1,20 +1,21 @@
-from uuid import uuid4, UUID
-from datetime import datetime
+from typing import Type
 
 from fastapi import HTTPException
 from sqlalchemy import desc, func
+from sqlalchemy.orm import Session
+from uuid import uuid4
 
-from src.backend.models import models
-from src.backend.schemas import schemas
+from src.backend.models import *
+from src.backend.schemas import *
 
 
-def create_user(session, new_user_schema: schemas.UserCreateSchema):
+def create_user(session: Session, new_user_schema: UserCreateSchema) -> User:
     existing_user_model = get_user_by_username(session, new_user_schema.profile_name)
 
     if existing_user_model is not None:
         raise HTTPException(status_code=400, detail="User with given profile name already exists")
 
-    new_user_model = models.User(**new_user_schema.dict(), created_at=datetime.utcnow())
+    new_user_model = User(**new_user_schema.dict(), created_at=datetime.utcnow())
     new_user_model.uuid = uuid4()
 
     session.add(new_user_model)
@@ -24,7 +25,7 @@ def create_user(session, new_user_schema: schemas.UserCreateSchema):
     return new_user_model
 
 
-def create_blog(session, new_blog_schema: schemas.BlogCreateSchema):
+def create_blog(session: Session, new_blog_schema: BlogCreateSchema) -> Blog:
     user_creator_model = get_user_by_id(session, new_blog_schema.user_id)
 
     if user_creator_model is None:
@@ -35,7 +36,10 @@ def create_blog(session, new_blog_schema: schemas.BlogCreateSchema):
     if existing_blog_model is not None:
         raise HTTPException(status_code=400, detail="Blog with given title already exists")
 
-    new_blog_model = models.Blog(**new_blog_schema.dict(), created_at=datetime.utcnow())
+    new_blog_dict = new_blog_schema.dict()
+    del new_blog_dict["user_id"]
+
+    new_blog_model = Blog(**new_blog_dict, created_at=datetime.utcnow())
     new_blog_model.uuid = uuid4()
     new_blog_model.owners.append(user_creator_model)
 
@@ -46,7 +50,7 @@ def create_blog(session, new_blog_schema: schemas.BlogCreateSchema):
     return new_blog_model
 
 
-def create_post(session, new_post_schema: schemas.PostCreateSchema):
+def create_post(session: Session, new_post_schema: PostCreateSchema) -> Post:
     parent_blog_model = get_blog_by_id(session, new_post_schema.blog_id)
 
     if parent_blog_model is None:
@@ -57,12 +61,17 @@ def create_post(session, new_post_schema: schemas.PostCreateSchema):
     if user_creator_model is None:
         raise HTTPException(status_code=404, detail="Post creator does not exist")
 
+    creator_blogs = get_user_blogs(session, user_creator_model.id)
+
+    if parent_blog_model not in creator_blogs:
+        raise HTTPException(status_code=400, detail="User does not own blog")
+
     existing_post_model = get_post_by_title(session, new_post_schema.title, new_post_schema.blog_id)
 
     if existing_post_model is not None:
         raise HTTPException(status_code=400, detail="Post with given title already exists in given blog")
 
-    new_post_model = models.Post(**new_post_schema.dict(), created_at=datetime.utcnow())
+    new_post_model = Post(**new_post_schema.dict(), created_at=datetime.utcnow())
     new_post_model.uuid = uuid4()
     new_post_model.user = user_creator_model
     new_post_model.blog = parent_blog_model
@@ -74,18 +83,21 @@ def create_post(session, new_post_schema: schemas.PostCreateSchema):
     return new_post_model
 
 
-def create_comment(session, new_comment_schema: schemas.CommentCreateSchema):
-    parent_post_model = get_post_by_uuid(session, new_comment_schema.post_uuid)
+def create_comment(session: Session, new_comment_schema: CommentCreateSchema) -> Comment:
+    parent_post_model = get_post_by_id(session, new_comment_schema.post_id)
 
     if parent_post_model is None:
         raise HTTPException(status_code=404, detail="Parent post does not exist")
 
-    user_creator_model = get_user_by_uuid(session, new_comment_schema.user_uuid)
+    user_creator_model = get_user_by_id(session, new_comment_schema.user_id)
 
     if user_creator_model is None:
         raise HTTPException(status_code=404, detail="Comment creator does not exist")
 
-    new_comment_model = models.Comment(**new_comment_schema.dict(), created_at=datetime.utcnow())
+    new_comment_model = Comment(**new_comment_schema.dict(), created_at=datetime.utcnow())
+    new_comment_model.uuid = uuid4()
+    new_comment_model.user = user_creator_model
+    new_comment_model.post = parent_post_model
 
     session.add(new_comment_model)
     session.commit()
@@ -94,17 +106,26 @@ def create_comment(session, new_comment_schema: schemas.CommentCreateSchema):
     return new_comment_model
 
 
-def create_blog_like(session, new_like_schema: schemas.BlogLikeCreateSchema):
-    new_like_model = models.BlogLike(**new_like_schema.dict(), liked_at=datetime.utcnow())
-    user_model = get_user_by_uuid(session, new_like_schema.user_id)
-    blog_model = get_blog_by_uuid(session, new_like_schema.blog_id)
+def create_blog_like(session: Session, new_like_schema: BlogLikeCreateSchema) -> BlogLike:
+    liking_user_model = get_user_by_id(session, new_like_schema.user_id)
 
-    if user_model is None:
+    if liking_user_model is None:
         raise HTTPException(status_code=404, detail="Liking user does not exist")
 
-    if blog_model is None:
+    liked_blog_model = get_blog_by_id(session, new_like_schema.blog_id)
+
+    if liked_blog_model is None:
         raise HTTPException(status_code=404, detail="Liked blog does not exist")
 
+    existing_blog_like_model = get_blog_like_by_id(session, new_like_schema.user_id, new_like_schema.blog_id)
+
+    if existing_blog_like_model is not None:
+        raise HTTPException(status_code=400, detail="Blog has already been liked")
+
+    new_like_model = BlogLike(**new_like_schema.dict(), liked_at=datetime.utcnow())
+    new_like_model.user = liking_user_model
+    new_like_model.blog = liked_blog_model
+
     session.add(new_like_model)
     session.commit()
     session.refresh(new_like_model)
@@ -112,17 +133,26 @@ def create_blog_like(session, new_like_schema: schemas.BlogLikeCreateSchema):
     return new_like_model
 
 
-def create_post_like(session, new_like_schema: schemas.PostLikeCreateSchema):
-    new_like_model = models.PostLike(**new_like_schema.dict(), liked_at=datetime.utcnow())
-    user_model = get_user_by_uuid(session, new_like_schema.user_id)
-    post_model = get_post_by_uuid(session, new_like_schema.post_id)
+def create_post_like(session: Session, new_like_schema: PostLikeCreateSchema) -> PostLike:
+    liking_user_model = get_user_by_id(session, new_like_schema.user_id)
 
-    if user_model is None:
+    if liking_user_model is None:
         raise HTTPException(status_code=404, detail="Liking user does not exist")
 
-    if post_model is None:
+    liked_post_model = get_post_by_id(session, new_like_schema.post_id)
+
+    if liked_post_model is None:
         raise HTTPException(status_code=404, detail="Liked post does not exist")
 
+    existing_post_like_model = get_post_like_by_id(session, new_like_schema.user_id, new_like_schema.post_id)
+
+    if existing_post_like_model is not None:
+        raise HTTPException(status_code=400, detail="Post has already been liked")
+
+    new_like_model = PostLike(**new_like_schema.dict(), liked_at=datetime.utcnow())
+    new_like_model.user = liking_user_model
+    new_like_model.post = liked_post_model
+
     session.add(new_like_model)
     session.commit()
     session.refresh(new_like_model)
@@ -130,16 +160,25 @@ def create_post_like(session, new_like_schema: schemas.PostLikeCreateSchema):
     return new_like_model
 
 
-def create_comment_like(session, new_like_schema: schemas.CommentLikeCreateSchema):
-    new_like_model = models.CommentLike(**new_like_schema.dict(), liked_at=datetime.utcnow())
-    user_model = get_user_by_uuid(session, new_like_schema.user_id)
-    comment_model = get_comment_by_id(session, new_like_schema.comment_id)
+def create_comment_like(session: Session, new_like_schema: CommentLikeCreateSchema) -> CommentLike:
+    liking_user_model = get_user_by_id(session, new_like_schema.user_id)
 
-    if user_model is None:
+    if liking_user_model is None:
         raise HTTPException(status_code=404, detail="Liking user does not exist")
 
-    if comment_model is None:
+    liked_comment_model = get_comment_by_id(session, new_like_schema.comment_id)
+
+    if liked_comment_model is None:
         raise HTTPException(status_code=404, detail="Liked comment does not exist")
+
+    existing_comment_like_model = get_comment_like_by_id(session, new_like_schema.user_id, new_like_schema.comment_id)
+
+    if existing_comment_like_model is not None:
+        raise HTTPException(status_code=400, detail="Comment has already been liked")
+
+    new_like_model = CommentLike(**new_like_schema.dict(), liked_at=datetime.utcnow())
+    new_like_model.user = liking_user_model
+    new_like_model.comment = liked_comment_model
 
     session.add(new_like_model)
     session.commit()
@@ -148,17 +187,26 @@ def create_comment_like(session, new_like_schema: schemas.CommentLikeCreateSchem
     return new_like_model
 
 
-def create_blog_save(session, new_save_schema: schemas.BlogSaveCreateSchema):
-    new_save_model = models.BlogSave(**new_save_schema.dict(), saved_at=datetime.utcnow())
-    user_model = get_user_by_uuid(session, new_save_schema.user_id)
-    blog_model = get_blog_by_uuid(session, new_save_schema.blog_id)
+def create_blog_save(session: Session, new_save_schema: BlogSaveCreateSchema) -> BlogSave:
+    saving_user_model = get_user_by_id(session, new_save_schema.user_id)
 
-    if user_model is None:
+    if saving_user_model is None:
         raise HTTPException(status_code=404, detail="Saving user does not exist")
 
-    if blog_model is None:
+    saving_blog_model = get_blog_by_id(session, new_save_schema.blog_id)
+
+    if saving_blog_model is None:
         raise HTTPException(status_code=404, detail="Saved blog does not exist")
 
+    existing_blog_save_model = get_blog_save_by_id(session, new_save_schema.user_id, new_save_schema.blog_id)
+
+    if existing_blog_save_model is not None:
+        raise HTTPException(status_code=400, detail="Blog has already been saved")
+
+    new_save_model = BlogSave(**new_save_schema.dict(), saved_at=datetime.utcnow())
+    new_save_model.user = saving_user_model
+    new_save_model.blog = saving_blog_model
+
     session.add(new_save_model)
     session.commit()
     session.refresh(new_save_model)
@@ -166,17 +214,26 @@ def create_blog_save(session, new_save_schema: schemas.BlogSaveCreateSchema):
     return new_save_model
 
 
-def create_post_save(session, new_save_schema: schemas.PostSaveCreateSchema):
-    new_save_model = models.PostSave(**new_save_schema.dict(), saved_at=datetime.utcnow())
-    user_model = get_user_by_uuid(session, new_save_schema.user_id)
-    post_model = get_post_by_uuid(session, new_save_schema.post_id)
+def create_post_save(session: Session, new_save_schema: PostSaveCreateSchema) -> PostSave:
+    saving_user_model = get_user_by_id(session, new_save_schema.user_id)
 
-    if user_model is None:
+    if saving_user_model is None:
         raise HTTPException(status_code=404, detail="Saving user does not exist")
 
-    if post_model is None:
+    saved_post_model = get_post_by_id(session, new_save_schema.post_id)
+
+    if saved_post_model is None:
         raise HTTPException(status_code=404, detail="Saved post does not exist")
 
+    existing_post_save_model = get_post_save_by_id(session, new_save_schema.user_id, new_save_schema.post_id)
+
+    if existing_post_save_model is not None:
+        raise HTTPException(status_code=400, detail="Post has already been saved")
+
+    new_save_model = PostSave(**new_save_schema.dict(), saved_at=datetime.utcnow())
+    new_save_model.user = saving_user_model
+    new_save_model.post = saved_post_model
+
     session.add(new_save_model)
     session.commit()
     session.refresh(new_save_model)
@@ -184,16 +241,25 @@ def create_post_save(session, new_save_schema: schemas.PostSaveCreateSchema):
     return new_save_model
 
 
-def create_comment_save(session, new_save_schema: schemas.CommentSaveCreateSchema):
-    new_save_model = models.CommentSave(**new_save_schema.dict(), saved_at=datetime.utcnow())
-    user_model = get_user_by_uuid(session, new_save_schema.user_id)
-    comment_model = get_comment_by_id(session, new_save_schema.comment_id)
+def create_comment_save(session: Session, new_save_schema: CommentSaveCreateSchema) -> CommentSave:
+    saving_user_model = get_user_by_id(session, new_save_schema.user_id)
 
-    if user_model is None:
+    if saving_user_model is None:
         raise HTTPException(status_code=404, detail="Saving user does not exist")
 
-    if comment_model is None:
+    saved_comment_model = get_comment_by_id(session, new_save_schema.comment_id)
+
+    if saved_comment_model is None:
         raise HTTPException(status_code=404, detail="Saved comment does not exist")
+
+    existing_comment_save_model = get_comment_save_by_id(session, new_save_schema.user_id, new_save_schema.comment_id)
+
+    if existing_comment_save_model is not None:
+        raise HTTPException(status_code=400, detail="Comment has already been saved")
+
+    new_save_model = CommentSave(**new_save_schema.dict(), saved_at=datetime.utcnow())
+    new_save_model.user = saving_user_model
+    new_save_model.comment = saved_comment_model
 
     session.add(new_save_model)
     session.commit()
@@ -202,83 +268,85 @@ def create_comment_save(session, new_save_schema: schemas.CommentSaveCreateSchem
     return new_save_model
 
 
-def get_user_by_id(session, user_id: int):
-    return session.query(models.User).filter(models.User.id == user_id).first()
+def get_user_by_id(session: Session, user_id: int) -> Type[User] | None:
+    return session.query(User).filter(User.id == user_id).first()
 
 
-def get_user_by_uuid(session, user_uuid: UUID):
-    return session.query(models.User).filter(models.User.uuid == user_uuid).first()
+def get_user_by_uuid(session: Session, user_uuid: UUID) -> Type[User] | None:
+    return session.query(User).filter(User.uuid == user_uuid).first()
 
 
-def get_user_by_username(session, user_profile_name: str):
-    return session.query(models.User).filter(models.User.profile_name == user_profile_name).first()
+def get_user_by_username(session: Session, user_profile_name: str) -> Type[User] | None:
+    return session.query(User).filter(User.profile_name == user_profile_name).first()
 
 
-def get_user_by_name_and_password(session, user_profile_name: str, user_password: str):
-    return session.query(models.User). \
-        filter(models.User.profile_name == user_profile_name, models.User.password == user_password). \
+def get_user_by_username_and_password(session: Session, 
+                                      user_profile_name: str, 
+                                      user_password: str) -> Type[User] | None:
+    return session.query(User). \
+        filter(User.profile_name == user_profile_name 
+               and User.password == user_password). \
         first()
 
 
-def get_users_by_blog(session, blog_id: int):
-    return session.query(models.User). \
-        join(models.UserBlog, models.UserBlog.user_id == models.User.id). \
-        filter(models.UserBlog.blog_id == blog_id). \
+def get_users_by_blog(session: Session, blog_id: int) -> list[Type[User]]:
+    return session.query(User). \
+        join(UserBlog, UserBlog.user_id == User.id). \
+        filter(UserBlog.blog_id == blog_id). \
         all()
 
 
-def get_blog_by_id(session, blog_id: int):
-    return session.query(models.Blog).filter(models.Blog.id == blog_id).first()
+def get_blog_by_id(session: Session, blog_id: int) -> Type[Blog] | None:
+    return session.query(Blog).filter(Blog.id == blog_id).first()
 
 
-def get_blog_by_uuid(session, blog_uuid: UUID):
-    return session.query(models.Blog).filter(models.Blog.uuid == blog_uuid).first()
+def get_blog_by_uuid(session: Session, blog_uuid: UUID) -> Type[Blog] | None:
+    return session.query(Blog).filter(Blog.uuid == blog_uuid).first()
 
 
-def get_blog_by_title(session, blog_title: str):
-    return session.query(models.Blog).filter(models.Blog.title == blog_title).first()
+def get_blog_by_title(session: Session, blog_title: str) -> Type[Blog] | None:
+    return session.query(Blog).filter(Blog.title == blog_title).first()
 
 
-def get_post_by_id(session, post_id: int):
-    return session.query(models.Post).filter(models.Post.id == post_id).first()
+def get_post_by_id(session: Session, post_id: int) -> Type[Post] | None:
+    return session.query(Post).filter(Post.id == post_id).first()
 
 
-def get_post_by_uuid(session, post_uuid: UUID):
-    return session.query(models.Post).filter(models.Post.uuid == post_uuid).first()
+def get_post_by_uuid(session: Session, post_uuid: UUID) -> Type[Post] | None:
+    return session.query(Post).filter(Post.uuid == post_uuid).first()
 
 
 # Requires a relevant blog ID to be passed as the website allows for
 # posts with the same name to appear across multiple blogs
-def get_post_by_title(session, post_title: str, blog_id: int):
-    return session.query(models.Post).filter(models.Post.title == post_title
-                                             and models.Post.blog.id == blog_id).first()
+def get_post_by_title(session: Session, post_title: str, blog_id: int) -> Type[Post] | None:
+    return session.query(Post).filter(Post.title == post_title and Post.blog.id == blog_id).first()
 
 
-def get_comment_by_id(session, comment_id: int):
-    return session.query(models.Comment).filter(models.Comment.id == comment_id).first()
+def get_comment_by_id(session: Session, comment_id: int) -> Type[Comment] | None:
+    return session.query(Comment).filter(Comment.id == comment_id).first()
 
 
-def get_user_blogs(session, user_id: int):
-    return session.query(models.Blog). \
-        join(models.UserBlog, models.UserBlog.blog_id == models.Blog.id). \
-        filter(models.UserBlog.user_id == user_id). \
+def get_user_blogs(session: Session, user_id: int) -> list[Type[Blog]]:
+    return session.query(Blog). \
+        join(UserBlog, UserBlog.blog_id == Blog.id). \
+        filter(UserBlog.user_id == user_id). \
         all()
 
 
-def get_blog_posts(session, blog_id: int):
-    return session.query(models.Post).filter(models.Post.blog_id == blog_id).all()
+def get_blog_posts(session: Session, blog_id: int) -> list[Type[Post]]:
+    return session.query(Post).filter(Post.blog_id == blog_id).all()
 
 
-def get_post_comments(session, post_id: int):
-    return session.query(models.Comment).filter(models.Comment.post_id == post_id).all()
+def get_post_comments(session: Session, post_id: int) -> list[Type[Comment]]:
+    return session.query(Comment).filter(Comment.post_id == post_id).all()
 
 
-def get_user_comments(session, user_id: int):
-    return session.query(models.Comment).filter(models.Comment.user_id == user_id).all()
+def get_user_comments(session: Session, user_id: int) -> list[Type[Comment]]:
+    return session.query(Comment).filter(Comment.user_id == user_id).all()
 
 
-def get_user_followers(session, user_uuid: str):
-    user = session.query(models.User).filter(models.User.uuid == user_uuid).first()
+def get_user_followers(session: Session, user_uuid: str) -> list[Type[User]]:
+    user = session.query(User).filter(User.uuid == user_uuid).first()
     follower_associations = user.follower_associations if user else []
     followers = []
 
@@ -288,8 +356,8 @@ def get_user_followers(session, user_uuid: str):
     return followers
 
 
-def get_user_follows(session, user_uuid: str):
-    user = session.query(models.User).filter(models.User.uuid == user_uuid).first()
+def get_user_follows(session: Session, user_uuid: str) -> list[Type[User]]:
+    user = session.query(User).filter(User.uuid == user_uuid).first()
     follow_associations = user.follow_associations if user else []
     follows = []
 
@@ -299,31 +367,73 @@ def get_user_follows(session, user_uuid: str):
     return follows
 
 
-def get_all_users(session):
-    return session.query(models.User).all()
+def get_all_users(session: Session) -> list[Type[User]]:
+    return session.query(User).all()
 
 
-def get_all_blogs(session):
-    return session.query(models.Blog).all()
+def get_all_blogs(session: Session) -> list[Type[Blog]]:
+    return session.query(Blog).all()
 
 
-def get_n_most_popular_blogs(session, amount_to_display: int):
-    return session.query(models.Blog). \
-        outerjoin(models.BlogLike, models.BlogLike.blog_id == models.Blog.id). \
-        order_by(desc(func.count(models.BlogLike.user_id))). \
-        group_by(models.Blog.id). \
+def get_n_most_popular_blogs(session: Session, amount_to_display: int) -> list[Type[Blog]]:
+    return session.query(Blog). \
+        outerjoin(BlogLike, BlogLike.blog_id == Blog.id). \
+        order_by(desc(func.count(BlogLike.user_id))). \
+        group_by(Blog.id). \
         limit(amount_to_display).all()
 
 
-def get_all_posts(session):
-    return session.query(models.Post).all()
+def get_all_posts(session: Session) -> list[Type[Post]]:
+    return session.query(Post).all()
 
 
-def get_all_comments(session):
-    return session.query(models.Comment).all()
+def get_all_comments(session: Session) -> list[Type[Comment]]:
+    return session.query(Comment).all()
 
 
-def update_user_by_uuid(session, user_update_data: schemas.UserUpdateSchema, user_uuid: str):
+def get_blog_like_by_id(session: Session, user_id: int, blog_id: int) -> Type[BlogLike] | None:
+    return session.query(BlogLike).\
+        filter(BlogLike.user_id == user_id
+               and BlogLike.blog_id == blog_id).\
+        first()
+
+
+def get_blog_save_by_id(session: Session, user_id: int, blog_id: int) -> Type[BlogSave] | None:
+    return session.query(BlogSave).\
+        filter(BlogSave.user_id == user_id
+               and BlogSave.blog_id == blog_id).\
+        first()
+
+
+def get_post_like_by_id(session: Session, user_id: int, post_id: int) -> Type[PostLike] | None:
+    return session.query(PostLike).\
+        filter(PostLike.user_id == user_id
+               and PostLike.post_id == post_id).\
+        first()
+
+
+def get_post_save_by_id(session: Session, user_id: int, post_id: int) -> Type[PostSave] | None:
+    return session.query(PostSave).\
+        filter(PostSave.user_id == user_id
+               and PostSave.post_id == post_id).\
+        first()
+
+
+def get_comment_like_by_id(session: Session, user_id: int, comment_id: int) -> Type[CommentLike] | None:
+    return session.query(CommentLike).\
+        filter(CommentLike.user_id == user_id
+               and CommentLike.comment_id == comment_id).\
+        first()
+
+
+def get_comment_save_by_id(session: Session, user_id: int, comment_id: int) -> Type[CommentSave] | None:
+    return session.query(CommentSave).\
+        filter(CommentSave.user_id == user_id
+               and CommentSave.comment_id == comment_id).\
+        first()
+
+
+def update_user_by_uuid(session: Session, user_update_data: UserUpdateSchema, user_uuid: str) -> Type[User]:
     given_user_model = get_user_by_uuid(session, user_uuid)
 
     if given_user_model is None:
@@ -339,7 +449,7 @@ def update_user_by_uuid(session, user_update_data: schemas.UserUpdateSchema, use
     return given_user_model
 
 
-def update_blog_by_id(session, blog_update_data: schemas.BlogUpdateSchema, blog_id: int):
+def update_blog_by_id(session: Session, blog_update_data: BlogUpdateSchema, blog_id: int) -> Type[Blog]:
     given_blog_model = get_blog_by_uuid(session, blog_id)
 
     if given_blog_model is None:
@@ -355,7 +465,7 @@ def update_blog_by_id(session, blog_update_data: schemas.BlogUpdateSchema, blog_
     return given_blog_model
 
 
-def update_post_by_id(session, post_update_data: schemas.PostUpdateSchema, post_id: int):
+def update_post_by_id(session: Session, post_update_data: PostUpdateSchema, post_id: int) -> Type[Post]:
     given_post_model = get_post_by_uuid(session, post_id)
 
     if given_post_model is None:
@@ -371,7 +481,9 @@ def update_post_by_id(session, post_update_data: schemas.PostUpdateSchema, post_
     return given_post_model
 
 
-def update_comment_by_id(session, comment_update_data: schemas.CommentUpdateSchema, comment_id: int):
+def update_comment_by_id(session: Session, 
+                         comment_update_data: CommentUpdateSchema, 
+                         comment_id: int) -> Type[Comment]:
     given_comment_model = get_comment_by_id(session, comment_id)
 
     if given_comment_model is None:
@@ -387,75 +499,75 @@ def update_comment_by_id(session, comment_update_data: schemas.CommentUpdateSche
     return given_comment_model
 
 
-def delete_user_by_id(session, user_id: int):
-    session.query(models.User).filter(models.User.id == user_id).delete()
+def delete_user_by_id(session: Session, user_id: int) -> None:
+    session.query(User).filter(User.id == user_id).delete()
     session.commit()
 
 
-def delete_blog_by_id(session, blog_id: int):
-    session.query(models.Blog).filter(models.Blog.id == blog_id).delete()
+def delete_blog_by_id(session: Session, blog_id: int) -> None:
+    session.query(Blog).filter(Blog.id == blog_id).delete()
     session.commit()
 
 
-def delete_post_by_id(session, post_id: int):
-    session.query(models.Post).filter(models.Post.id == post_id).delete()
+def delete_post_by_id(session: Session, post_id: int) -> None:
+    session.query(Post).filter(Post.id == post_id).delete()
     session.commit()
 
 
-def delete_comment_by_id(session, comment_id: int):
-    session.query(models.Comment).filter(models.Comment.id == comment_id).delete()
+def delete_comment_by_id(session: Session, comment_id: int) -> None:
+    session.query(Comment).filter(Comment.id == comment_id).delete()
     session.commit()
 
 
-def delete_blog_like_by_id(session, user_id: int, blog_id: int):
-    session.query(models.BlogLike). \
-        filter(models.BlogLike.user_id == user_id,
-               models.BlogLike.blog_id == blog_id). \
+def delete_blog_like_by_id(session: Session, user_id: int, blog_id: int) -> None:
+    session.query(BlogLike). \
+        filter(BlogLike.user_id == user_id,
+               BlogLike.blog_id == blog_id). \
         delete()
 
     session.commit()
 
 
-def delete_post_like_by_id(session, user_id: int, post_id: int):
-    session.query(models.PostLike). \
-        filter(models.PostLike.user_id == user_id,
-               models.PostLike.post_id == post_id). \
+def delete_post_like_by_id(session: Session, user_id: int, post_id: int) -> None:
+    session.query(PostLike). \
+        filter(PostLike.user_id == user_id,
+               PostLike.post_id == post_id). \
         delete()
 
     session.commit()
 
 
-def delete_comment_like_by_id(session, user_id: int, comment_id: int):
-    session.query(models.CommentLike). \
-        filter(models.CommentLike.user_id == user_id,
-               models.CommentLike.comment_id == comment_id). \
+def delete_comment_like_by_id(session: Session, user_id: int, comment_id: int) -> None:
+    session.query(CommentLike). \
+        filter(CommentLike.user_id == user_id,
+               CommentLike.comment_id == comment_id). \
         delete()
 
     session.commit()
 
 
-def delete_blog_save_by_id(session, user_id: int, blog_id: int):
-    session.query(models.BlogSave). \
-        filter(models.BlogSave.user_id == user_id,
-               models.BlogSave.blog_id == blog_id). \
+def delete_blog_save_by_id(session: Session, user_id: int, blog_id: int) -> None:
+    session.query(BlogSave). \
+        filter(BlogSave.user_id == user_id,
+               BlogSave.blog_id == blog_id). \
         delete()
 
     session.commit()
 
 
-def delete_post_save_by_id(session, user_id: int, post_id: int):
-    session.query(models.PostSave). \
-        filter(models.PostSave.user_id == user_id,
-               models.PostSave.post_id == post_id). \
+def delete_post_save_by_id(session: Session, user_id: int, post_id: int) -> None:
+    session.query(PostSave). \
+        filter(PostSave.user_id == user_id,
+               PostSave.post_id == post_id). \
         delete()
 
     session.commit()
 
 
-def delete_comment_save_by_id(session, user_id: int, comment_id: int):
-    session.query(models.CommentSave). \
-        filter(models.CommentSave.user_id == user_id,
-               models.CommentSave.comment_id == comment_id). \
+def delete_comment_save_by_id(session: Session, user_id: int, comment_id: int) -> None:
+    session.query(CommentSave). \
+        filter(CommentSave.user_id == user_id,
+               CommentSave.comment_id == comment_id). \
         delete()
 
     session.commit()
