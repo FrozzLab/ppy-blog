@@ -21,7 +21,7 @@
                 <h3 style="margin-left: 20px;">TOP BLOGS:</h3>
             </div>
             {% for blog in blogs %}
-            <a href="/blog/blog-page/{{ blog.id }}">
+            <a href="/blog/blog-page/{{ blog.uuid }}">
                 <div class="blog_li_div">
                     <h4 style="margin-left: 20px;">{{ blog.title }}</h4>
                     <p style="margin-left: 20px;">"{{ blog.description }}"</p>
