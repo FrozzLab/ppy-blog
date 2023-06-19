@@ -3,9 +3,15 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from uuid import UUID
 
-from src.backend.models import models
-from src.backend.schemas import schemas
-from src.backend.services import crud
+from src.backend.models.models import get_metadata
+from src.backend.schemas.create_schemas import UserCreateSchema, BlogCreateSchema, PostCreateSchema, \
+    CommentCreateSchema, BlogLikeCreateSchema, PostLikeCreateSchema, CommentLikeCreateSchema, BlogSaveCreateSchema, \
+    PostSaveCreateSchema, CommentSaveCreateSchema
+from src.backend.schemas.get_schemas import UserGetSchema, BlogGetSchema, PostGetSchema, CommentGetSchema, \
+    BlogLikeGetSchema, PostLikeGetSchema, CommentLikeGetSchema, CommentSaveGetSchema, PostSaveGetSchema, \
+    BlogSaveGetSchema
+from src.backend.schemas.update_schemas import PostUpdateSchema, BlogUpdateSchema, CommentUpdateSchema, UserUpdateSchema
+from src.backend.services.get import get_blog_by_title, get_user_by_username_and_password
 
 DB_URL = "sqlite:///D:\\blog.db"
 
@@ -15,7 +21,7 @@ connection = engine.connect()
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 session = SessionLocal()
 
-metadata = models.get_metadata()
+metadata = get_metadata()
 metadata.create_all(bind=engine)
 
 tags_metadata = [
@@ -48,266 +54,267 @@ tags_metadata = [
 app = FastAPI(openapi_tags=tags_metadata)
 
 
-@app.post("/api/createUser", status_code=200, response_model=schemas.UserGetSchema, tags=["user"])
-def create_user(new_user_schema: schemas.UserCreateSchema):
-    return crud.create_user(session, new_user_schema)
+@app.post("/api/createUser", status_code=200, response_model=UserGetSchema, tags=["user"])
+def create_user(new_user_schema: UserCreateSchema):
+    return create_user(session, new_user_schema)
 
 
-@app.post("/api/createBlog", status_code=200, response_model=schemas.BlogGetSchema, tags=["blog"])
-def create_blog(new_blog_schema: schemas.BlogCreateSchema):
-    return crud.create_blog(session, new_blog_schema)
+@app.post("/api/createBlog", status_code=200, response_model=BlogGetSchema, tags=["blog"])
+def create_blog(new_blog_schema: BlogCreateSchema):
+    return create_blog(session, new_blog_schema)
 
 
-@app.post("/api/createPost", status_code=200, response_model=schemas.PostGetSchema, tags=["post"])
-def create_post(new_post_schema: schemas.PostCreateSchema):
-    return crud.create_post(session, new_post_schema)
+@app.post("/api/createPost", status_code=200, response_model=PostGetSchema, tags=["post"])
+def create_post(new_post_schema: PostCreateSchema):
+    return create_post(session, new_post_schema)
 
 
-@app.post("/api/createComment", status_code=200, response_model=schemas.CommentGetSchema, tags=["comment"])
-def create_comment(new_comment_schema: schemas.CommentCreateSchema):
-    return crud.create_comment(session, new_comment_schema)
+@app.post("/api/createComment", status_code=200, response_model=CommentGetSchema, tags=["comment"])
+def create_comment(new_comment_schema: CommentCreateSchema):
+    return create_comment(session, new_comment_schema)
 
 
-@app.post("/api/createBlogLike", status_code=200, response_model=schemas.BlogLikeGetSchema, tags=["like"])
-def create_blog_like(new_blog_like_schema: schemas.BlogLikeCreateSchema):
-    return crud.create_blog_like(session, new_blog_like_schema)
+@app.post("/api/createBlogLike", status_code=200, response_model=BlogLikeGetSchema, tags=["like"])
+def create_blog_like(new_blog_like_schema: BlogLikeCreateSchema):
+    return create_blog_like(session, new_blog_like_schema)
 
 
-@app.post("/api/createPostLike", status_code=200, response_model=schemas.PostLikeGetSchema, tags=["like"])
-def create_post_like(new_post_like_schema: schemas.PostLikeCreateSchema):
-    return crud.create_post_like(session, new_post_like_schema)
+@app.post("/api/createPostLike", status_code=200, response_model=PostLikeGetSchema, tags=["like"])
+def create_post_like(new_post_like_schema: PostLikeCreateSchema):
+    return create_post_like(session, new_post_like_schema)
 
 
-@app.post("/api/createCommentLike", status_code=200, response_model=schemas.CommentLikeGetSchema, tags=["like"])
-def create_comment_like(new_comment_like_schema: schemas.CommentLikeCreateSchema):
-    return crud.create_comment_like(session, new_comment_like_schema)
+@app.post("/api/createCommentLike", status_code=200, response_model=CommentLikeGetSchema, tags=["like"])
+def create_comment_like(new_comment_like_schema: CommentLikeCreateSchema):
+    return create_comment_like(session, new_comment_like_schema)
 
 
-@app.post("/api/createBlogSave", status_code=200, response_model=schemas.BlogSaveGetSchema, tags=["save"])
-def create_blog_save(new_blog_save_schema: schemas.BlogSaveCreateSchema):
-    return crud.create_blog_save(session, new_blog_save_schema)
+@app.post("/api/createBlogSave", status_code=200, response_model=BlogSaveGetSchema, tags=["save"])
+def create_blog_save(new_blog_save_schema: BlogSaveCreateSchema):
+    return create_blog_save(session, new_blog_save_schema)
 
 
-@app.post("/api/createPostSave", status_code=200, response_model=schemas.PostSaveGetSchema, tags=["save"])
-def create_post_save(new_post_save_schema: schemas.PostSaveCreateSchema):
-    return crud.create_post_save(session, new_post_save_schema)
+@app.post("/api/createPostSave", status_code=200, response_model=PostSaveGetSchema, tags=["save"])
+def create_post_save(new_post_save_schema: PostSaveCreateSchema):
+    return create_post_save(session, new_post_save_schema)
 
 
-@app.post("/api/createCommentSave", status_code=200, response_model=schemas.CommentSaveGetSchema, tags=["save"])
-def create_comment_save(new_comment_save_schema: schemas.CommentSaveCreateSchema):
-    return crud.create_comment_save(session, new_comment_save_schema)
+@app.post("/api/createCommentSave", status_code=200, response_model=CommentSaveGetSchema, tags=["save"])
+def create_comment_save(new_comment_save_schema: CommentSaveCreateSchema):
+    return create_comment_save(session, new_comment_save_schema)
 
 
-@app.get("/api/getUser/{user_uuid}", response_model=schemas.UserGetSchema, tags=["user"])
+@app.get("/api/getUser/{user_uuid}", response_model=UserGetSchema, tags=["user"])
 def get_user_by_uuid(user_uuid: UUID):
-    user = crud.get_user_by_uuid(session, user_uuid)
+    user = get_user_by_uuid(session, user_uuid)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
 
 # Bad solution since the password is shown in plaintext in url, will fix later
-@app.get("/api/getUserByLogin", response_model=schemas.UserGetSchema, tags=["user"])
+# TODO: fix get_user_by_name_and_password to not expose user password
+@app.get("/api/getUserByLogin", response_model=UserGetSchema, tags=["user"])
 def get_user_by_name_and_password(user_profile_name: str, user_password: str):
-    user = crud.get_user_by_username_and_password(session, user_profile_name, user_password)
+    user = get_user_by_username_and_password(session, user_profile_name, user_password)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
 
-@app.get("/api/getUsersByBlog/{blog_id}", response_model=list[schemas.UserGetSchema], tags=["user"])
-def get_users_by_blog(blog_id: int):
-    users = crud.get_users_by_blog(session, blog_id)
+@app.get("/api/getUsersByBlog/{blog_uuid}", response_model=list[UserGetSchema], tags=["user"])
+def get_users_by_blog(blog_uuid: UUID):
+    users = get_users_by_blog(session, blog_uuid)
     if not users:
         raise HTTPException(status_code=404, detail="Users not found")
     return users
 
 
-@app.get("/api/getBlog/{blog_id}", response_model=schemas.BlogGetSchema, tags=["blog"])
-def get_blog_by_id(blog_id: int):
-    blog = crud.get_blog_by_id(session, blog_id)
+@app.get("/api/getBlog/{blog_uuid}", response_model=BlogGetSchema, tags=["blog"])
+def get_blog_by_uuid(blog_uuid: UUID):
+    blog = get_blog_by_uuid(session, blog_uuid)
     if blog is None:
         raise HTTPException(status_code=404, detail="Blog not found")
     return blog
 
 
-@app.get("/api/getBlog/{blog_title}", response_model=schemas.BlogGetSchema, tags=["blog"])
+@app.get("/api/getBlog/{blog_title}", response_model=BlogGetSchema, tags=["blog"])
 def get_blog_by_title(blog_title: str):
-    blog = crud.get_blog_by_title(session, blog_title)
+    blog = get_blog_by_title(session, blog_title)
     if blog is None:
         raise HTTPException(status_code=404, detail="Blog not found")
     return blog
 
 
-@app.get("/api/getPost/{post_id}", response_model=schemas.PostGetSchema, tags=["post"])
-def get_post_by_id(post_id: int):
-    post = crud.get_post_by_uuid(session, post_id)
+@app.get("/api/getPost/{post_uuid}", response_model=PostGetSchema, tags=["post"])
+def get_post_by_uuid(post_uuid: UUID):
+    post = get_post_by_uuid(session, post_uuid)
     if post is None:
         raise HTTPException(status_code=404, detail="Post not found")
     return post
 
 
-@app.get("/api/getComment/{comment_id}", response_model=schemas.CommentGetSchema, tags=["comment"])
-def get_comment_by_id(comment_id: int):
-    comment = crud.get_comment_by_id(session, comment_id)
+@app.get("/api/getComment/{comment_uuid}", response_model=CommentGetSchema, tags=["comment"])
+def get_comment_by_uuid(comment_uuid: UUID):
+    comment = get_comment_by_uuid(session, comment_uuid)
     if comment is None:
         raise HTTPException(status_code=404, detail="Comment not found")
     return comment
 
 
-@app.get("/api/getUserBlogs/{user_id}", response_model=list[schemas.BlogGetSchema], tags=["blog"])
-def get_user_blogs(user_id: int):
-    user_blogs = crud.get_user_blogs(session, user_id)
+@app.get("/api/getUserBlogs/{user_uuid}", response_model=list[BlogGetSchema], tags=["blog"])
+def get_user_blogs_by_uuid(user_uuid: UUID):
+    user_blogs = get_user_blogs_by_uuid(session, user_uuid)
     if not user_blogs:
         raise HTTPException(status_code=404, detail="No blogs belonging to given user found")
     return user_blogs
 
 
-@app.get("/api/getBlogPosts/{blog_id}", response_model=list[schemas.PostGetSchema], tags=["post"])
-def get_blog_posts(blog_id: int):
-    blog_posts = crud.get_blog_posts(session, blog_id)
+@app.get("/api/getBlogPosts/{blog_uuid}", response_model=list[PostGetSchema], tags=["post"])
+def get_blog_posts_by_uuid(blog_uuid: UUID):
+    blog_posts = get_blog_posts_by_uuid(session, blog_uuid)
     if not blog_posts:
         raise HTTPException(status_code=404, detail="No posts belonging to given blog found")
     return blog_posts
 
 
-@app.get("/api/getPostComments/{post_id}", response_model=list[schemas.CommentGetSchema], tags=["comment"])
-def get_post_comments(post_id: int):
-    post_comments = crud.get_post_comments(session, post_id)
+@app.get("/api/getPostComments/{post_uuid}", response_model=list[CommentGetSchema], tags=["comment"])
+def get_post_comments_by_uuid(post_uuid: UUID):
+    post_comments = get_post_comments_by_uuid(session, post_uuid)
     if not post_comments:
         raise HTTPException(status_code=404, detail="No comments belonging to given post found")
     return post_comments
 
 
-@app.get("/api/getUserComments/{user_id}", response_model=list[schemas.CommentGetSchema], tags=["comment"])
-def get_user_comments(user_id: int):
-    user_comments = crud.get_user_comments(session, user_id)
+@app.get("/api/getUserComments/{user_uuid}", response_model=list[CommentGetSchema], tags=["comment"])
+def get_user_comments_by_uuid(user_uuid: UUID):
+    user_comments = get_user_comments_by_uuid(session, user_uuid)
     if not user_comments:
         raise HTTPException(status_code=404, detail="No comments belonging to given user found")
     return user_comments
 
 
-@app.get("/api/getUserFollowers/{user_uuid}", response_model=list[schemas.UserGetSchema], tags=["user"])
-def get_user_followers(user_uuid: str):
-    user_followers = crud.get_user_followers_by_uuid(session, user_uuid)
+@app.get("/api/getUserFollowers/{user_uuid}", response_model=list[UserGetSchema], tags=["user"])
+def get_user_followers_by_uuid(user_uuid: UUID):
+    user_followers = get_user_followers_by_uuid(session, user_uuid)
     if not user_followers:
         raise HTTPException(status_code=404, detail="The user does not exist or has no followers")
     return user_followers
 
 
-@app.get("/api/getUserFollows/{user_uuid}", response_model=list[schemas.UserGetSchema], tags=["user"])
-def get_user_follows(user_uuid: str):
-    user_follows = crud.get_user_follows_by_uuid(session, user_uuid)
+@app.get("/api/getUserFollows/{user_uuid}", response_model=list[UserGetSchema], tags=["user"])
+def get_user_follows_by_uuid(user_uuid: UUID):
+    user_follows = get_user_follows_by_uuid(session, user_uuid)
     if not user_follows:
         raise HTTPException(status_code=404, detail="The user does not exist or does not follow anyone")
     return user_follows
 
 
-@app.get("/api/getAllUsers", response_model=list[schemas.UserGetSchema], tags=["user"])
+@app.get("/api/getAllUsers", response_model=list[UserGetSchema], tags=["user"])
 def get_all_users():
-    users = crud.get_all_users(session)
+    users = get_all_users(session)
     if not users:
         raise HTTPException(status_code=404, detail="No users in database")
     return users
 
 
-@app.get("/api/getAllBlogs", response_model=list[schemas.BlogGetSchema], tags=["blog"])
+@app.get("/api/getAllBlogs", response_model=list[BlogGetSchema], tags=["blog"])
 def get_all_blogs():
-    blogs = crud.get_all_blogs(session)
+    blogs = get_all_blogs(session)
     if not blogs:
         raise HTTPException(status_code=404, detail="No blogs in database")
     return blogs
 
 
-@app.get("/api/getNMostPopularBlogs", response_model=list[schemas.BlogGetSchema], tags=["blog"])
+@app.get("/api/getNMostPopularBlogs", response_model=list[BlogGetSchema], tags=["blog"])
 def get_n_most_popular_blogs(amount_to_display: int):
-    blogs = crud.get_n_most_popular_blogs(session, amount_to_display)
+    blogs = get_n_most_popular_blogs(session, amount_to_display)
     if not blogs:
         raise HTTPException(status_code=404, detail="No blogs in database")
     return blogs
 
 
-@app.get("/api/getAllPosts", response_model=list[schemas.PostGetSchema], tags=["post"])
+@app.get("/api/getAllPosts", response_model=list[PostGetSchema], tags=["post"])
 def get_all_posts():
-    posts = crud.get_all_posts(session)
+    posts = get_all_posts(session)
     if not posts:
         raise HTTPException(status_code=404, detail="No posts in database")
     return posts
 
 
-@app.get("/api/getAllComments", response_model=list[schemas.CommentGetSchema], tags=["comment"])
+@app.get("/api/getAllComments", response_model=list[CommentGetSchema], tags=["comment"])
 def get_all_comments():
-    comments = crud.get_all_comments(session)
+    comments = get_all_comments(session)
     if not comments:
         raise HTTPException(status_code=404, detail="No comments in database")
     return comments
 
 
-@app.put("/api/updateUser/{user_id}", response_model=schemas.UserGetSchema, tags=["user"])
-def update_user_by_uuid(user_update_data: schemas.UserUpdateSchema, user_uuid: str):
-    return crud.update_user_by_uuid(session, user_update_data, user_uuid)
+@app.put("/api/updateUser/{user_uuid}", response_model=UserGetSchema, tags=["user"])
+def update_user_by_uuid(user_update_data: UserUpdateSchema, user_uuid: UUID):
+    return update_user_by_uuid(session, user_update_data, user_uuid)
 
 
-@app.put("/api/updateBlog/{blog_id}", response_model=schemas.BlogGetSchema, tags=["blog"])
-def update_blog_by_id(blog_update_data: schemas.BlogUpdateSchema, blog_id: int):
-    return crud.update_blog_by_uuid(session, blog_update_data, blog_id)
+@app.put("/api/updateBlog/{blog_uuid}", response_model=BlogGetSchema, tags=["blog"])
+def update_blog_by_uuid(blog_update_data: BlogUpdateSchema, blog_id: UUID):
+    return update_blog_by_uuid(session, blog_update_data, blog_id)
 
 
-@app.put("/api/updatePost/{post_id}", response_model=schemas.PostGetSchema, tags=["post"])
-def update_post_by_id(post_update_data: schemas.PostUpdateSchema, post_id: int):
-    return crud.update_post_by_uuid(session, post_update_data, post_id)
+@app.put("/api/updatePost/{post_uuid}", response_model=PostGetSchema, tags=["post"])
+def update_post_by_uuid(post_update_data: PostUpdateSchema, post_id: UUID):
+    return update_post_by_uuid(session, post_update_data, post_id)
 
 
-@app.put("/api/updateComment/{comment_id}", response_model=schemas.CommentGetSchema, tags=["comment"])
-def update_comment_by_id(comment_update_data: schemas.CommentUpdateSchema, comment_id: int):
-    return crud.update_comment_by_uuid(session, comment_update_data, comment_id)
+@app.put("/api/updateComment/{comment_uuid}", response_model=CommentGetSchema, tags=["comment"])
+def update_comment_by_uuid(comment_update_data: CommentUpdateSchema, comment_id: UUID):
+    return update_comment_by_uuid(session, comment_update_data, comment_id)
 
 
-@app.delete("/api/deleteUser/{user_id}", status_code=204, tags=["user"])
-def delete_user_by_id(user_id: int):
-    crud.delete_user_by_uuid(session, user_id)
+@app.delete("/api/deleteUser/{user_uuid}", status_code=204, tags=["user"])
+def delete_user_by_uuid(user_uuid: UUID):
+    delete_user_by_uuid(session, user_uuid)
 
 
-@app.delete("/api/deleteBlog/{blog_id}", status_code=204, tags=["blog"])
-def delete_blog_by_id(blog_id: int):
-    crud.delete_blog_by_uuid(session, blog_id)
+@app.delete("/api/deleteBlog/{blog_uuid}", status_code=204, tags=["blog"])
+def delete_blog_by_uuid(blog_uuid: UUID):
+    delete_blog_by_uuid(session, blog_uuid)
 
 
-@app.delete("/api/deletePost/{post_id}", status_code=204, tags=["post"])
-def delete_post_by_id(post_id: int):
-    crud.delete_post_by_uuid(session, post_id)
+@app.delete("/api/deletePost/{post_uuid}", status_code=204, tags=["post"])
+def delete_post_by_uuid(post_uuid: UUID):
+    delete_post_by_uuid(session, post_uuid)
 
 
-@app.delete("/api/deleteComment/{comment_id}", status_code=204, tags=["comment"])
-def delete_comment_by_id(comment_id: int):
-    crud.delete_comment_by_uuid(session, comment_id)
+@app.delete("/api/deleteComment/{comment_uuid}", status_code=204, tags=["comment"])
+def delete_comment_by_uuid(comment_uuid: UUID):
+    delete_comment_by_uuid(session, comment_uuid)
 
 
-@app.delete("/api/deleteBlogLike/{user_id}/{blog_id}", status_code=204, tags=["like"])
-def delete_blog_like_by_id(user_id: int, blog_id: int):
-    crud.delete_blog_like_by_uuid(session, user_id, blog_id)
+@app.delete("/api/deleteBlogLike/{user_uuid}/{blog_uuid}", status_code=204, tags=["like"])
+def delete_blog_like_by_uuid(user_uuid: UUID, blog_uuid: UUID):
+    delete_blog_like_by_uuid(session, user_uuid, blog_uuid)
 
 
-@app.delete("/api/deletePostLike/{user_id}/{post_id}", status_code=204, tags=["like"])
-def delete_post_like_by_id(user_id: int, post_id: int):
-    crud.delete_post_like_by_uuid(session, user_id, post_id)
+@app.delete("/api/deletePostLike/{user_uuid}/{post_uuid}", status_code=204, tags=["like"])
+def delete_post_like_by_uuid(user_uuid: UUID, post_uuid: UUID):
+    delete_post_like_by_uuid(session, user_uuid, post_uuid)
 
 
-@app.delete("/api/deleteCommentLike/{user_id}/{comment_id}", status_code=204, tags=["like"])
-def delete_comment_like_by_id(user_id: int, comment_id: int):
-    crud.delete_comment_like_by_uuid(session, user_id, comment_id)
+@app.delete("/api/deleteCommentLike/{user_uuid}/{comment_uuid}", status_code=204, tags=["like"])
+def delete_comment_like_by_uuid(user_uuid: UUID, comment_uuid: UUID):
+    delete_comment_like_by_uuid(session, user_uuid, comment_uuid)
 
 
-@app.delete("/api/deleteBlogSave/{user_id}/{blog_id}", status_code=204, tags=["save"])
-def delete_blog_save_by_id(user_id: int, blog_id: int):
-    crud.delete_blog_save_by_uuid(session, user_id, blog_id)
+@app.delete("/api/deleteBlogSave/{user_uuid}/{blog_uuid}", status_code=204, tags=["save"])
+def delete_blog_save_by_uuid(user_uuid: UUID, blog_uuid: UUID):
+    delete_blog_save_by_uuid(session, user_uuid, blog_uuid)
 
 
-@app.delete("/api/deletePostSave/{user_id}/{post_id}", status_code=204, tags=["save"])
-def delete_post_save_by_id(user_id: int, post_id: int):
-    crud.delete_post_save_by_uuid(session, user_id, post_id)
+@app.delete("/api/deletePostSave/{user_uuid}/{post_uuid}", status_code=204, tags=["save"])
+def delete_post_save_by_uuid(user_uuid: UUID, post_uuid: UUID):
+    delete_post_save_by_uuid(session, user_uuid, post_uuid)
 
 
-@app.delete("/api/deleteCommentSave/{user_id}/{comment_id}", status_code=204, tags=["save"])
-def delete_comment_save_by_id(user_id: int, comment_id: int):
-    crud.delete_comment_save_by_uuid(session, user_id, comment_id)
+@app.delete("/api/deleteCommentSave/{user_uuid}/{comment_uuid}", status_code=204, tags=["save"])
+def delete_comment_save_by_uuid(user_uuid: UUID, comment_uuid: UUID):
+    delete_comment_save_by_uuid(session, user_uuid, comment_uuid)
