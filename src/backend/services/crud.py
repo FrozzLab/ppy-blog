@@ -290,10 +290,7 @@ def get_user_by_username_and_password(session: Session,
 
 
 def get_users_by_blog(session: Session, blog_id: int) -> list[Type[User]]:
-    return session.query(User). \
-        join(UserBlog, UserBlog.user_id == User.id). \
-        filter(UserBlog.blog_id == blog_id). \
-        all()
+    return session.query(Blog).filter(Blog.id == blog_id).first().owners
 
 
 def get_blog_by_id(session: Session, blog_id: int) -> Type[Blog] | None:
@@ -326,45 +323,34 @@ def get_comment_by_id(session: Session, comment_id: int) -> Type[Comment] | None
     return session.query(Comment).filter(Comment.id == comment_id).first()
 
 
+def get_comment_by_uuid(session: Session, comment_uuid: UUID) -> Type[Comment] | None:
+    return session.query(Comment).filter(Comment.uuid == comment_uuid).first()
+
+
 def get_user_blogs(session: Session, user_id: int) -> list[Type[Blog]]:
-    return session.query(Blog). \
-        join(UserBlog, UserBlog.blog_id == Blog.id). \
-        filter(UserBlog.user_id == user_id). \
-        all()
+    return session.query(User).filter(User.id == user_id).first().blogs
 
 
 def get_blog_posts(session: Session, blog_id: int) -> list[Type[Post]]:
-    return session.query(Post).filter(Post.blog_id == blog_id).all()
+    return session.query(Blog).filter(Blog.id == blog_id).first().posts
 
 
 def get_post_comments(session: Session, post_id: int) -> list[Type[Comment]]:
-    return session.query(Comment).filter(Comment.post_id == post_id).all()
+    return session.query(Post).filter(Post.id == post_id).first().comments
 
 
 def get_user_comments(session: Session, user_id: int) -> list[Type[Comment]]:
-    return session.query(Comment).filter(Comment.user_id == user_id).all()
+    return session.query(User).filter(User.id == user_id).first().comments
 
 
-def get_user_followers(session: Session, user_uuid: str) -> list[Type[User]]:
-    user = session.query(User).filter(User.uuid == user_uuid).first()
-    follower_associations = user.follower_associations if user else []
-    followers = []
-
-    for follower_association in follower_associations:
-        followers.append(follower_association.follower)
-
-    return followers
+def get_user_followers_by_uuid(session: Session, user_uuid: UUID) -> list[Type[User]]:
+    follower_associations = session.query(User).filter(User.uuid == user_uuid).first().follower_associations
+    return [follower_association.follower for follower_association in follower_associations]
 
 
-def get_user_follows(session: Session, user_uuid: str) -> list[Type[User]]:
-    user = session.query(User).filter(User.uuid == user_uuid).first()
-    follow_associations = user.follow_associations if user else []
-    follows = []
-
-    for follow_association in follow_associations:
-        follows.append(follow_association.user)
-
-    return follows
+def get_user_follows_by_uuid(session: Session, user_uuid: UUID) -> list[Type[User]]:
+    follow_associations = session.query(User).filter(User.uuid == user_uuid).first().follow_associations
+    return [follow_association.user for follow_association in follow_associations]
 
 
 def get_all_users(session: Session) -> list[Type[User]]:
@@ -375,6 +361,10 @@ def get_all_blogs(session: Session) -> list[Type[Blog]]:
     return session.query(Blog).all()
 
 
+# Tried to adapt it using the blog_like_associations field in Blog, but doing so
+# resulted in errors that I couldn't solve, so until I figure it out it will have
+# to stay this way
+# TODO: Fix get_n_most_popular_blogs to use blog_like_associations
 def get_n_most_popular_blogs(session: Session, amount_to_display: int) -> list[Type[Blog]]:
     return session.query(Blog). \
         outerjoin(BlogLike, BlogLike.blog_id == Blog.id). \
@@ -392,48 +382,60 @@ def get_all_comments(session: Session) -> list[Type[Comment]]:
 
 
 def get_blog_like_by_id(session: Session, user_id: int, blog_id: int) -> Type[BlogLike] | None:
-    return session.query(BlogLike).\
-        filter(BlogLike.user_id == user_id
-               and BlogLike.blog_id == blog_id).\
-        first()
+    return session.query(BlogLike).filter(BlogLike.user_id == user_id and BlogLike.blog_id == blog_id).first()
+
+
+def get_blog_like_count_by_uuid(session: Session, blog_uuid: UUID) -> int | None:
+    return session.query(Blog).filter(Blog.uuid == blog_uuid).first().blog_like_associations.len()
 
 
 def get_blog_save_by_id(session: Session, user_id: int, blog_id: int) -> Type[BlogSave] | None:
-    return session.query(BlogSave).\
-        filter(BlogSave.user_id == user_id
-               and BlogSave.blog_id == blog_id).\
-        first()
+    return session.query(BlogSave).filter(BlogSave.user_id == user_id and BlogSave.blog_id == blog_id).first()
+
+
+def get_blog_save_count_by_uuid(session: Session, blog_uuid: UUID) -> int | None:
+    return session.query(Blog).filter(Blog.uuid == blog_uuid).first().blog_save_associations.len()
 
 
 def get_post_like_by_id(session: Session, user_id: int, post_id: int) -> Type[PostLike] | None:
-    return session.query(PostLike).\
-        filter(PostLike.user_id == user_id
-               and PostLike.post_id == post_id).\
-        first()
+    return session.query(PostLike).filter(PostLike.user_id == user_id and PostLike.post_id == post_id).first()
+
+
+def get_post_like_count_by_uuid(session: Session, post_uuid: UUID) -> int | None:
+    return session.query(Post).filter(Post.uuid == post_uuid).first().post_like_associations.len()
 
 
 def get_post_save_by_id(session: Session, user_id: int, post_id: int) -> Type[PostSave] | None:
-    return session.query(PostSave).\
-        filter(PostSave.user_id == user_id
-               and PostSave.post_id == post_id).\
-        first()
+    return session.query(PostSave).filter(PostSave.user_id == user_id and PostSave.post_id == post_id).first()
+
+
+def get_post_save_count_by_uuid(session: Session, post_uuid: UUID) -> int | None:
+    return session.query(Post).filter(Post.uuid == post_uuid).first().post_save_associations.len()
 
 
 def get_comment_like_by_id(session: Session, user_id: int, comment_id: int) -> Type[CommentLike] | None:
-    return session.query(CommentLike).\
+    return session.query(CommentLike). \
         filter(CommentLike.user_id == user_id
-               and CommentLike.comment_id == comment_id).\
+               and CommentLike.comment_id == comment_id). \
         first()
+
+
+def get_comment_like_count_by_uuid(session: Session, comment_uuid: UUID) -> int | None:
+    return session.query(Comment).filter(Comment.uuid == comment_uuid).first().comment_like_associations.len()
 
 
 def get_comment_save_by_id(session: Session, user_id: int, comment_id: int) -> Type[CommentSave] | None:
-    return session.query(CommentSave).\
+    return session.query(CommentSave). \
         filter(CommentSave.user_id == user_id
-               and CommentSave.comment_id == comment_id).\
+               and CommentSave.comment_id == comment_id). \
         first()
 
 
-def update_user_by_uuid(session: Session, user_update_data: UserUpdateSchema, user_uuid: str) -> Type[User]:
+def get_comment_save_count_by_uuid(session: Session, comment_uuid: UUID) -> int | None:
+    return session.query(Comment).filter(Comment.uuid == comment_uuid).first().comment_save_associations.len()
+
+
+def update_user_by_uuid(session: Session, user_update_data: UserUpdateSchema, user_uuid: UUID) -> Type[User]:
     given_user_model = get_user_by_uuid(session, user_uuid)
 
     if given_user_model is None:
@@ -449,8 +451,8 @@ def update_user_by_uuid(session: Session, user_update_data: UserUpdateSchema, us
     return given_user_model
 
 
-def update_blog_by_id(session: Session, blog_update_data: BlogUpdateSchema, blog_id: int) -> Type[Blog]:
-    given_blog_model = get_blog_by_uuid(session, blog_id)
+def update_blog_by_uuid(session: Session, blog_update_data: BlogUpdateSchema, blog_uuid: UUID) -> Type[Blog]:
+    given_blog_model = get_blog_by_uuid(session, blog_uuid)
 
     if given_blog_model is None:
         raise HTTPException(status_code=404, detail="Blog queued for update does not exist")
@@ -465,8 +467,8 @@ def update_blog_by_id(session: Session, blog_update_data: BlogUpdateSchema, blog
     return given_blog_model
 
 
-def update_post_by_id(session: Session, post_update_data: PostUpdateSchema, post_id: int) -> Type[Post]:
-    given_post_model = get_post_by_uuid(session, post_id)
+def update_post_by_uuid(session: Session, post_update_data: PostUpdateSchema, post_uuid: UUID) -> Type[Post]:
+    given_post_model = get_post_by_uuid(session, post_uuid)
 
     if given_post_model is None:
         raise HTTPException(status_code=404, detail="Post queued for update does not exist")
@@ -481,10 +483,10 @@ def update_post_by_id(session: Session, post_update_data: PostUpdateSchema, post
     return given_post_model
 
 
-def update_comment_by_id(session: Session, 
-                         comment_update_data: CommentUpdateSchema, 
-                         comment_id: int) -> Type[Comment]:
-    given_comment_model = get_comment_by_id(session, comment_id)
+def update_comment_by_uuid(session: Session,
+                           comment_update_data: CommentUpdateSchema,
+                           comment_uuid: UUID) -> Type[Comment]:
+    given_comment_model = get_comment_by_uuid(session, comment_uuid)
 
     if given_comment_model is None:
         raise HTTPException(status_code=404, detail="Comment queued for update does not exist")
@@ -499,75 +501,75 @@ def update_comment_by_id(session: Session,
     return given_comment_model
 
 
-def delete_user_by_id(session: Session, user_id: int) -> None:
-    session.query(User).filter(User.id == user_id).delete()
+def delete_user_by_uuid(session: Session, user_uuid: UUID) -> None:
+    session.query(User).filter(User.uuid == user_uuid).delete()
     session.commit()
 
 
-def delete_blog_by_id(session: Session, blog_id: int) -> None:
-    session.query(Blog).filter(Blog.id == blog_id).delete()
+def delete_blog_by_uuid(session: Session, blog_uuid: UUID) -> None:
+    session.query(Blog).filter(Blog.uuid == blog_uuid).delete()
     session.commit()
 
 
-def delete_post_by_id(session: Session, post_id: int) -> None:
-    session.query(Post).filter(Post.id == post_id).delete()
+def delete_post_by_uuid(session: Session, post_uuid: UUID) -> None:
+    session.query(Post).filter(Post.uuid == post_uuid).delete()
     session.commit()
 
 
-def delete_comment_by_id(session: Session, comment_id: int) -> None:
-    session.query(Comment).filter(Comment.id == comment_id).delete()
+def delete_comment_by_uuid(session: Session, comment_uuid: UUID) -> None:
+    session.query(Comment).filter(Comment.uuid == comment_uuid).delete()
     session.commit()
 
 
-def delete_blog_like_by_id(session: Session, user_id: int, blog_id: int) -> None:
+def delete_blog_like_by_uuid(session: Session, user_uuid: UUID, blog_uuid: UUID) -> None:
     session.query(BlogLike). \
-        filter(BlogLike.user_id == user_id,
-               BlogLike.blog_id == blog_id). \
+        filter(BlogLike.user_uuid == user_uuid
+               and BlogLike.blog_uuid == blog_uuid). \
         delete()
 
     session.commit()
 
 
-def delete_post_like_by_id(session: Session, user_id: int, post_id: int) -> None:
+def delete_post_like_by_uuid(session: Session, user_uuid: UUID, post_uuid: UUID) -> None:
     session.query(PostLike). \
-        filter(PostLike.user_id == user_id,
-               PostLike.post_id == post_id). \
+        filter(PostLike.user_uuid == user_uuid
+               and PostLike.post_uuid == post_uuid). \
         delete()
 
     session.commit()
 
 
-def delete_comment_like_by_id(session: Session, user_id: int, comment_id: int) -> None:
+def delete_comment_like_by_uuid(session: Session, user_uuid: UUID, comment_uuid: UUID) -> None:
     session.query(CommentLike). \
-        filter(CommentLike.user_id == user_id,
-               CommentLike.comment_id == comment_id). \
+        filter(CommentLike.user_uuid == user_uuid
+               and CommentLike.comment_uuid == comment_uuid). \
         delete()
 
     session.commit()
 
 
-def delete_blog_save_by_id(session: Session, user_id: int, blog_id: int) -> None:
+def delete_blog_save_by_uuid(session: Session, user_uuid: UUID, blog_uuid: UUID) -> None:
     session.query(BlogSave). \
-        filter(BlogSave.user_id == user_id,
-               BlogSave.blog_id == blog_id). \
+        filter(BlogSave.user_uuid == user_uuid
+               and BlogSave.blog_uuid == blog_uuid). \
         delete()
 
     session.commit()
 
 
-def delete_post_save_by_id(session: Session, user_id: int, post_id: int) -> None:
+def delete_post_save_by_uuid(session: Session, user_uuid: UUID, post_uuid: UUID) -> None:
     session.query(PostSave). \
-        filter(PostSave.user_id == user_id,
-               PostSave.post_id == post_id). \
+        filter(PostSave.user_uuid == user_uuid
+               and PostSave.post_uuid == post_uuid). \
         delete()
 
     session.commit()
 
 
-def delete_comment_save_by_id(session: Session, user_id: int, comment_id: int) -> None:
+def delete_comment_save_by_uuid(session: Session, user_uuid: UUID, comment_uuid: UUID) -> None:
     session.query(CommentSave). \
-        filter(CommentSave.user_id == user_id,
-               CommentSave.comment_id == comment_id). \
+        filter(CommentSave.user_uuid == user_uuid
+               and CommentSave.comment_uuid == comment_uuid). \
         delete()
 
     session.commit()

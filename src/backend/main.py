@@ -1,14 +1,11 @@
-from datetime import datetime
-from uuid import UUID
-
 from fastapi import FastAPI, HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from uuid import UUID
 
 from src.backend.models import models
 from src.backend.schemas import schemas
 from src.backend.services import crud
-
 
 DB_URL = "sqlite:///D:\\blog.db"
 
@@ -102,14 +99,14 @@ def create_comment_save(new_comment_save_schema: schemas.CommentSaveCreateSchema
 
 
 @app.get("/api/getUser/{user_uuid}", response_model=schemas.UserGetSchema, tags=["user"])
-def get_user_by_uuid(user_uuid: str):
+def get_user_by_uuid(user_uuid: UUID):
     user = crud.get_user_by_uuid(session, user_uuid)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
 
-# Bad solution since the password is shown in plaintext in uri, will fix later
+# Bad solution since the password is shown in plaintext in url, will fix later
 @app.get("/api/getUserByLogin", response_model=schemas.UserGetSchema, tags=["user"])
 def get_user_by_name_and_password(user_profile_name: str, user_password: str):
     user = crud.get_user_by_username_and_password(session, user_profile_name, user_password)
@@ -192,7 +189,7 @@ def get_user_comments(user_id: int):
 
 @app.get("/api/getUserFollowers/{user_uuid}", response_model=list[schemas.UserGetSchema], tags=["user"])
 def get_user_followers(user_uuid: str):
-    user_followers = crud.get_user_followers(session, user_uuid)
+    user_followers = crud.get_user_followers_by_uuid(session, user_uuid)
     if not user_followers:
         raise HTTPException(status_code=404, detail="The user does not exist or has no followers")
     return user_followers
@@ -200,7 +197,7 @@ def get_user_followers(user_uuid: str):
 
 @app.get("/api/getUserFollows/{user_uuid}", response_model=list[schemas.UserGetSchema], tags=["user"])
 def get_user_follows(user_uuid: str):
-    user_follows = crud.get_user_follows(session, user_uuid)
+    user_follows = crud.get_user_follows_by_uuid(session, user_uuid)
     if not user_follows:
         raise HTTPException(status_code=404, detail="The user does not exist or does not follow anyone")
     return user_follows
@@ -253,64 +250,64 @@ def update_user_by_uuid(user_update_data: schemas.UserUpdateSchema, user_uuid: s
 
 @app.put("/api/updateBlog/{blog_id}", response_model=schemas.BlogGetSchema, tags=["blog"])
 def update_blog_by_id(blog_update_data: schemas.BlogUpdateSchema, blog_id: int):
-    return crud.update_blog_by_id(session, blog_update_data, blog_id)
+    return crud.update_blog_by_uuid(session, blog_update_data, blog_id)
 
 
 @app.put("/api/updatePost/{post_id}", response_model=schemas.PostGetSchema, tags=["post"])
 def update_post_by_id(post_update_data: schemas.PostUpdateSchema, post_id: int):
-    return crud.update_post_by_id(session, post_update_data, post_id)
+    return crud.update_post_by_uuid(session, post_update_data, post_id)
 
 
 @app.put("/api/updateComment/{comment_id}", response_model=schemas.CommentGetSchema, tags=["comment"])
 def update_comment_by_id(comment_update_data: schemas.CommentUpdateSchema, comment_id: int):
-    return crud.update_comment_by_id(session, comment_update_data, comment_id)
+    return crud.update_comment_by_uuid(session, comment_update_data, comment_id)
 
 
 @app.delete("/api/deleteUser/{user_id}", status_code=204, tags=["user"])
 def delete_user_by_id(user_id: int):
-    crud.delete_user_by_id(session, user_id)
+    crud.delete_user_by_uuid(session, user_id)
 
 
 @app.delete("/api/deleteBlog/{blog_id}", status_code=204, tags=["blog"])
 def delete_blog_by_id(blog_id: int):
-    crud.delete_blog_by_id(session, blog_id)
+    crud.delete_blog_by_uuid(session, blog_id)
 
 
 @app.delete("/api/deletePost/{post_id}", status_code=204, tags=["post"])
 def delete_post_by_id(post_id: int):
-    crud.delete_post_by_id(session, post_id)
+    crud.delete_post_by_uuid(session, post_id)
 
 
 @app.delete("/api/deleteComment/{comment_id}", status_code=204, tags=["comment"])
 def delete_comment_by_id(comment_id: int):
-    crud.delete_comment_by_id(session, comment_id)
+    crud.delete_comment_by_uuid(session, comment_id)
 
 
 @app.delete("/api/deleteBlogLike/{user_id}/{blog_id}", status_code=204, tags=["like"])
 def delete_blog_like_by_id(user_id: int, blog_id: int):
-    crud.delete_blog_like_by_id(session, user_id, blog_id)
+    crud.delete_blog_like_by_uuid(session, user_id, blog_id)
 
 
 @app.delete("/api/deletePostLike/{user_id}/{post_id}", status_code=204, tags=["like"])
 def delete_post_like_by_id(user_id: int, post_id: int):
-    crud.delete_post_like_by_id(session, user_id, post_id)
+    crud.delete_post_like_by_uuid(session, user_id, post_id)
 
 
 @app.delete("/api/deleteCommentLike/{user_id}/{comment_id}", status_code=204, tags=["like"])
 def delete_comment_like_by_id(user_id: int, comment_id: int):
-    crud.delete_comment_like_by_id(session, user_id, comment_id)
+    crud.delete_comment_like_by_uuid(session, user_id, comment_id)
 
 
 @app.delete("/api/deleteBlogSave/{user_id}/{blog_id}", status_code=204, tags=["save"])
 def delete_blog_save_by_id(user_id: int, blog_id: int):
-    crud.delete_blog_save_by_id(session, user_id, blog_id)
+    crud.delete_blog_save_by_uuid(session, user_id, blog_id)
 
 
 @app.delete("/api/deletePostSave/{user_id}/{post_id}", status_code=204, tags=["save"])
 def delete_post_save_by_id(user_id: int, post_id: int):
-    crud.delete_post_save_by_id(session, user_id, post_id)
+    crud.delete_post_save_by_uuid(session, user_id, post_id)
 
 
 @app.delete("/api/deleteCommentSave/{user_id}/{comment_id}", status_code=204, tags=["save"])
 def delete_comment_save_by_id(user_id: int, comment_id: int):
-    crud.delete_comment_save_by_id(session, user_id, comment_id)
+    crud.delete_comment_save_by_uuid(session, user_id, comment_id)
