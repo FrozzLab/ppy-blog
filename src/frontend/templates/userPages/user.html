@@ -10,7 +10,7 @@
         <h1 id="blog_header">{{ user.profile_name }}</h1><br>
         <div style="float: left; margin-left: 20px;"><p>{{ user.first_name }} {{ user.last_name }}, {{ user.country }}<p> </div>
         <div id="user_buttons_div">
-            <a href="/blog/user-page/{{ current_user.id }}" style="color: aqua"><p>Hello, {{ current_user.profile_name }}</p></a>
+            <a href="/blog/user-page/{{ current_user.uuid }}" style="color: aqua"><p>Hello, {{ current_user.profile_name }}</p></a>
         </div>
     </header>
     

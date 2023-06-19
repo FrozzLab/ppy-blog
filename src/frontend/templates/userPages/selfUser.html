@@ -21,11 +21,11 @@
                 <a href="/blog/create-blog-page" style="color: aqua"><p style="margin-left: 20px;">create new blog</p></a>
             </div>
             {% for blog in blogs %}
-            <a href="/blog/blog-page/{{ blog.id }}">
+            <a href="/blog/blog-page/{{ blog.uuid }}">
                 <div class="blog_li_div">
                     <h4 style="margin-left: 20px;">{{ blog.title }}</h4>
                     <p style="margin-left: 20px;">"{{ blog.description }}"</p>
-                    <a href="/blog/create-post-page/{{ blog.id }}" style="color: aqua"><p style="margin-left: 20px;">create new post</p></a>
+                    <a href="/blog/create-post-page/{{ blog.uuid }}" style="color: aqua"><p style="margin-left: 20px;">create new post</p></a>
                 </div>
             </a>
             {% endfor %}
